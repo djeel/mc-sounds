@@ -317,7 +317,7 @@ const Index: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-40">
         <div className="container mx-auto px-4 py-6">
@@ -384,7 +384,7 @@ const Index: React.FC = () => {
                     ? "No sounds found" 
                     : "No sounds in this category"}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-foreground">
                 {activeCategory === 'favorites' && favorites.size === 0
                   ? "Start adding sounds to your favorites by clicking the heart icon"
                   : searchTerm

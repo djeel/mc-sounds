@@ -52,6 +52,17 @@
   }
 }
 
+html, body {
+  color-scheme: light dark;
+  background-color: #fff !important;
+  color: #222 !important;
+}
+
+body.dark, html.dark {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
@@ -143,7 +154,7 @@ textarea {
 }
 input::placeholder,
 textarea::placeholder {
-  color: rgb(var(--foreground));
+  color: rgb(var(--foreground)) !important;
   opacity: 0.6;
 }
 
@@ -215,4 +226,26 @@ svg, .icon {
 .theme-toggle-thumb.checked {
   transform: translateX(1.25rem);
   background: #000;
+}
+
+.bg-background {
+  background-color: #fff !important;
+}
+.dark .bg-background {
+  background-color: #000 !important;
+}
+.text-foreground {
+  color: #222 !important;
+}
+.dark .text-foreground {
+  color: #fff !important;
+}
+
+header, footer, .bg-card, .bg-popover, .bg-muted, .bg-accent, .bg-primary {
+  background-color: #fff !important;
+}
+.dark header, .dark footer, .dark .bg-card, .dark .sound-card, .dark .minecraft-button, .dark .tab-button, .dark .bg-popover, .dark .bg-muted, .dark .bg-accent, .dark .bg-primary {
+  background-color: #000 !important;
+  border-color: rgb(var(--border)) !important;
+  outline: none !important;
 }

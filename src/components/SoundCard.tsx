@@ -70,7 +70,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
         <h3 className="font-semibold text-foreground text-sm mb-1 leading-tight">
           {formatSoundName(soundName)}
         </h3>
-        <p className="text-xs text-muted-foreground capitalize">{category}</p>
+        <p className="text-xs text-foreground capitalize">{category}</p>
       </div>
 
       {/* Error message */}
