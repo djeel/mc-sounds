@@ -338,7 +338,7 @@ const Index: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-modrinth-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-4 border-primary-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Loading sound library...</p>
         </div>
       </div>
@@ -354,7 +354,7 @@ const Index: React.FC = () => {
           <p className="text-muted-foreground mb-4">{error}</p>
           <button
             onClick={loadSoundData}
-            className="minecraft-button px-4 py-2 bg-modrinth-green-500 text-white border-modrinth-green-600 hover:bg-modrinth-green-600"
+            className="minecraft-button px-4 py-2 bg-primary-green-500 text-white border-primary-green-600 hover:bg-primary-green-600"
           >
             Try Again
           </button>

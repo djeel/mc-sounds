@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Play, Download } from 'lucide-react';
 
@@ -90,9 +89,9 @@ const SoundCard: React.FC<SoundCardProps> = ({
             disabled={isLoading}
             className={`
               minecraft-button p-2 flex items-center justify-center
-              ${isPlaying ? 'bg-modrinth-green-500 text-white border-modrinth-green-600' : ''}
+              ${isPlaying ? 'bg-primary-green-500 text-white border-primary-green-600' : ''}
               ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-              focus:outline-none focus:ring-2 focus:ring-modrinth-green-500
+              focus:outline-none focus:ring-2 focus:ring-primary-green-500
             `}
             aria-label={isPlaying ? 'Currently playing' : 'Play sound'}
           >
@@ -109,7 +108,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
           {/* Download button */}
           <button
             onClick={handleDownload}
-            className="minecraft-button p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-modrinth-green-500"
+            className="minecraft-button p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary-green-500"
             aria-label="Download sound"
           >
             <Download className="w-4 h-4" />
@@ -121,8 +120,8 @@ const SoundCard: React.FC<SoundCardProps> = ({
           onClick={handleFavoriteToggle}
           className={`
             minecraft-button p-2 transition-colors
-            ${isFavorite ? 'bg-modrinth-green-500 text-white border-modrinth-green-600' : 'hover:bg-accent'}
-            focus:outline-none focus:ring-2 focus:ring-modrinth-green-500
+            ${isFavorite ? 'bg-primary-green-500 text-white border-primary-green-600' : 'hover:bg-accent'}
+            focus:outline-none focus:ring-2 focus:ring-primary-green-500
           `}
           aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           aria-pressed={isFavorite}

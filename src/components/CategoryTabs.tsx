@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Play, Square } from 'lucide-react';
 
@@ -75,10 +74,10 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
                 className={`
                   minecraft-button p-2 text-xs
                   ${isSequentialMode && currentSequentialCategory === category 
-                    ? 'bg-modrinth-green-500 text-white border-modrinth-green-600' 
+                    ? 'bg-primary-green-500 text-white border-primary-green-600' 
                     : 'hover:bg-accent'
                   }
-                  focus:outline-none focus:ring-2 focus:ring-modrinth-green-500
+                  focus:outline-none focus:ring-2 focus:ring-primary-green-500
                 `}
                 aria-label={
                   isSequentialMode && currentSequentialCategory === category
