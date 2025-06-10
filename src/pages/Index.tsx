@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SearchBar from '../components/SearchBar';
 import CategoryTabs from '../components/CategoryTabs';
@@ -24,6 +23,7 @@ const Index: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPlayingSound, setCurrentPlayingSound] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +57,18 @@ const Index: React.FC = () => {
       (soundId: string) => {
         setCurrentPlayingSound(soundId);
         setIsPlaying(true);
+        setIsPaused(false);
       },
       () => {
         setCurrentPlayingSound(null);
         setIsPlaying(false);
+        setIsPaused(false);
+      },
+      () => {
+        setIsPaused(true);
+      },
+      () => {
+        setIsPaused(false);
       }
     );
 
@@ -222,6 +230,24 @@ const Index: React.FC = () => {
     stopSequentialPlay(); // Also stop sequential play
   }, [stopSequentialPlay]);
 
+  // Handle pausing current sound
+  const handlePauseSound = useCallback(() => {
+    const audioManager = AudioManager.getInstance();
+    audioManager.pauseCurrent();
+  }, []);
+
+  // Handle resuming current sound
+  const handleResumeSound = useCallback(() => {
+    const audioManager = AudioManager.getInstance();
+    audioManager.resumeCurrent();
+  }, []);
+
+  // Handle rewinding current sound
+  const handleRewindSound = useCallback(() => {
+    const audioManager = AudioManager.getInstance();
+    audioManager.rewindCurrent();
+  }, []);
+
   // Handle toggling favorites
   const handleToggleFavorite = useCallback((soundId: string) => {
     FavoritesManager.toggleFavorite(soundId);
@@ -276,7 +302,7 @@ const Index: React.FC = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-              <div className="w-8 h-8 bg-modrinth-green-500 border-2 border-modrinth-green-600" />
+              <div className="w-8 h-8 bg-primary border-2 border-primary" />
               MC Sounds
             </h1>
             <div className="flex items-center gap-4">
@@ -352,7 +378,14 @@ const Index: React.FC = () => {
       <GlobalAudioPlayer
         currentSound={getCurrentSoundName()}
         isPlaying={isPlaying}
+        isPaused={isPaused}
+        currentSoundId={currentPlayingSound}
+        isFavorite={currentPlayingSound ? favorites.has(currentPlayingSound) : false}
         onStop={handleStopSound}
+        onPause={handlePauseSound}
+        onResume={handleResumeSound}
+        onRewind={handleRewindSound}
+        onToggleFavorite={handleToggleFavorite}
       />
 
       {/* Sequential player */}

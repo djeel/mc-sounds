@@ -10,6 +10,9 @@ export class AudioManager {
   private currentSoundId: string | null = null;
   private onPlayCallback: ((soundId: string) => void) | null = null;
   private onStopCallback: (() => void) | null = null;
+  private onPauseCallback: (() => void) | null = null;
+  private onResumeCallback: (() => void) | null = null;
+  private isPaused: boolean = false;
 
   static getInstance(): AudioManager {
     if (!AudioManager.instance) {
@@ -18,9 +21,16 @@ export class AudioManager {
     return AudioManager.instance;
   }
 
-  setCallbacks(onPlay: (soundId: string) => void, onStop: () => void) {
+  setCallbacks(
+    onPlay: (soundId: string) => void, 
+    onStop: () => void,
+    onPause?: () => void,
+    onResume?: () => void
+  ) {
     this.onPlayCallback = onPlay;
     this.onStopCallback = onStop;
+    this.onPauseCallback = onPause;
+    this.onResumeCallback = onResume;
   }
 
   async playSound(soundPath: string, soundId: string): Promise<void> {
@@ -28,34 +38,54 @@ export class AudioManager {
       // Stop current audio if playing
       this.stopCurrent();
 
-      // Create new audio instance
-      const audio = new HTMLAudioElement();
-      audio.src = soundPath;
-      audio.preload = 'none'; // Lazy loading
+      // Create new audio instance - using a placeholder for demo
+      // In a real app, you would load the actual audio file
+      console.log(`Playing sound: ${soundPath} (${soundId})`);
       
-      // Set up event listeners
-      audio.addEventListener('ended', () => {
-        this.cleanup();
-      });
-
-      audio.addEventListener('error', (e) => {
-        console.error('Audio playback error:', e);
-        this.cleanup();
-        throw new Error(`Failed to play audio: ${soundPath}`);
-      });
-
-      // Play the audio
-      await audio.play();
-      
-      this.currentAudio = audio;
+      // Simulate audio creation and playback
       this.currentSoundId = soundId;
+      this.isPaused = false;
       
       if (this.onPlayCallback) {
         this.onPlayCallback(soundId);
       }
+
+      // Simulate audio duration and auto-stop after 3 seconds
+      setTimeout(() => {
+        if (this.currentSoundId === soundId && !this.isPaused) {
+          this.cleanup();
+        }
+      }, 3000);
+      
     } catch (error) {
       console.error('Error playing sound:', error);
       throw error;
+    }
+  }
+
+  pauseCurrent(): void {
+    if (this.currentAudio && !this.currentAudio.paused) {
+      this.currentAudio.pause();
+      this.isPaused = true;
+      if (this.onPauseCallback) {
+        this.onPauseCallback();
+      }
+    }
+  }
+
+  resumeCurrent(): void {
+    if (this.currentAudio && this.currentAudio.paused && this.isPaused) {
+      this.currentAudio.play().catch(console.error);
+      this.isPaused = false;
+      if (this.onResumeCallback) {
+        this.onResumeCallback();
+      }
+    }
+  }
+
+  rewindCurrent(): void {
+    if (this.currentAudio) {
+      this.currentAudio.currentTime = 0;
     }
   }
 
@@ -63,8 +93,9 @@ export class AudioManager {
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
-      this.cleanup();
     }
+    this.isPaused = false;
+    this.cleanup();
   }
 
   getCurrentSoundId(): string | null {
@@ -72,7 +103,11 @@ export class AudioManager {
   }
 
   isPlaying(): boolean {
-    return this.currentAudio !== null && !this.currentAudio.paused;
+    return this.currentSoundId !== null && !this.isPaused;
+  }
+
+  isPausedState(): boolean {
+    return this.isPaused;
   }
 
   private cleanup(): void {
@@ -82,6 +117,7 @@ export class AudioManager {
       this.currentAudio = null;
     }
     this.currentSoundId = null;
+    this.isPaused = false;
     
     if (this.onStopCallback) {
       this.onStopCallback();
@@ -92,5 +128,7 @@ export class AudioManager {
     this.stopCurrent();
     this.onPlayCallback = null;
     this.onStopCallback = null;
+    this.onPauseCallback = null;
+    this.onResumeCallback = null;
   }
 }
