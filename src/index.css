@@ -252,6 +252,9 @@ svg, .icon {
   transform: translateX(1.25rem);
   background: #000;
 }
+.dark .theme-toggle-thumb.checked {
+  background: #fff !important;
+}
 
 .bg-background {
   background-color: #fff !important;
