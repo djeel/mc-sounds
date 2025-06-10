@@ -122,6 +122,7 @@ const Index: React.FC = () => {
     // Parse categories and sounds
     const categoriesSet = new Set<string>();
     const sounds: Sound[] = [];
+    const seen = new Set<string>(); // Pour dédoublonner par id
     for (const key of Object.keys(data)) {
       if (!data[key].sounds) continue;
       // Category is the first part before the dot
@@ -139,12 +140,17 @@ const Index: React.FC = () => {
         } else {
           continue;
         }
-        sounds.push({
-          id: relPath.replace(/\.[^/.]+$/, '').replace(/[\/]/g, '_'),
-          name,
-          path: '/sounds/' + relPath,
-          category: cat
-        });
+        const id = relPath.replace(/\.[^/.]+$/, '').replace(/[\/]/g, '_');
+        // Dédoublonnage : on ne garde qu'un son unique par id
+        if (!seen.has(cat + ':' + id)) {
+          seen.add(cat + ':' + id);
+          sounds.push({
+            id,
+            name,
+            path: '/sounds/' + relPath,
+            category: cat
+          });
+        }
       }
     }
     const categories = Array.from(categoriesSet) as string[];
