@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SearchBar from '../components/SearchBar';
 import CategoryTabs from '../components/CategoryTabs';
 import SoundCard from '../components/SoundCard';
 import GlobalAudioPlayer from '../components/GlobalAudioPlayer';
 import SequentialPlayer from '../components/SequentialPlayer';
+import ThemeSwitch from '../components/ThemeSwitch';
 import { AudioManager } from '../utils/audioManager';
 import { FavoritesManager } from '../utils/favoritesManager';
 import { useSequentialPlay } from '../hooks/useSequentialPlay';
@@ -85,34 +87,92 @@ const Index: React.FC = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Mock sound data (in a real app, this would come from file system scanning)
+      // Mock sound data with all the categories from the image
       const mockSounds: Sound[] = [
+        // Ambient sounds
+        { id: 'ambient_cave', name: 'cave.ogg', path: '/sounds/ambient/cave.ogg', category: 'ambient' },
+        { id: 'ambient_weather_rain', name: 'weather_rain.ogg', path: '/sounds/ambient/weather_rain.ogg', category: 'ambient' },
+        
         // Block sounds
         { id: 'block_stone_break', name: 'stone_break.ogg', path: '/sounds/block/stone_break.ogg', category: 'block' },
         { id: 'block_wood_place', name: 'wood_place.ogg', path: '/sounds/block/wood_place.ogg', category: 'block' },
         { id: 'block_grass_step', name: 'grass_step.ogg', path: '/sounds/block/grass_step.ogg', category: 'block' },
-        { id: 'block_sand_dig', name: 'sand_dig.ogg', path: '/sounds/block/sand_dig.ogg', category: 'block' },
+        
+        // Damage sounds
+        { id: 'damage_hit', name: 'hit.ogg', path: '/sounds/damage/hit.ogg', category: 'damage' },
+        { id: 'damage_fallbig', name: 'fallbig.ogg', path: '/sounds/damage/fallbig.ogg', category: 'damage' },
+        
+        // Dig sounds
+        { id: 'dig_sand', name: 'sand.ogg', path: '/sounds/dig/sand.ogg', category: 'dig' },
+        { id: 'dig_stone', name: 'stone.ogg', path: '/sounds/dig/stone.ogg', category: 'dig' },
+        
+        // Enchant sounds
+        { id: 'enchant_thorns_hit', name: 'thorns_hit.ogg', path: '/sounds/enchant/thorns_hit.ogg', category: 'enchant' },
+        
+        // Entity sounds
+        { id: 'entity_zombie_groan', name: 'zombie_groan.ogg', path: '/sounds/entity/zombie_groan.ogg', category: 'entity' },
+        { id: 'entity_cow_moo', name: 'cow_moo.ogg', path: '/sounds/entity/cow_moo.ogg', category: 'entity' },
+        
+        // Event sounds
+        { id: 'event_raid_horn', name: 'raid_horn.ogg', path: '/sounds/event/raid_horn.ogg', category: 'event' },
+        
+        // Fire sounds
+        { id: 'fire_fire', name: 'fire.ogg', path: '/sounds/fire/fire.ogg', category: 'fire' },
+        { id: 'fire_ignite', name: 'ignite.ogg', path: '/sounds/fire/ignite.ogg', category: 'fire' },
+        
+        // Fireworks sounds
+        { id: 'fireworks_blast', name: 'blast.ogg', path: '/sounds/fireworks/blast.ogg', category: 'fireworks' },
+        { id: 'fireworks_launch', name: 'launch.ogg', path: '/sounds/fireworks/launch.ogg', category: 'fireworks' },
         
         // Item sounds
         { id: 'item_pickup', name: 'item_pickup.ogg', path: '/sounds/item/pickup.ogg', category: 'item' },
         { id: 'item_sword_swing', name: 'sword_swing.ogg', path: '/sounds/item/sword_swing.ogg', category: 'item' },
         { id: 'item_bow_shoot', name: 'bow_shoot.ogg', path: '/sounds/item/bow_shoot.ogg', category: 'item' },
-        { id: 'item_eat_apple', name: 'eat_apple.ogg', path: '/sounds/item/eat_apple.ogg', category: 'item' },
+        
+        // Liquid sounds
+        { id: 'liquid_water', name: 'water.ogg', path: '/sounds/liquid/water.ogg', category: 'liquid' },
+        { id: 'liquid_lava_pop', name: 'lava_pop.ogg', path: '/sounds/liquid/lava_pop.ogg', category: 'liquid' },
+        
+        // Minecart sounds
+        { id: 'minecart_riding', name: 'riding.ogg', path: '/sounds/minecart/riding.ogg', category: 'minecart' },
+        
+        // Mob sounds
+        { id: 'mob_villager_yes', name: 'villager_yes.ogg', path: '/sounds/mob/villager_yes.ogg', category: 'mob' },
+        { id: 'mob_enderman_stare', name: 'enderman_stare.ogg', path: '/sounds/mob/enderman_stare.ogg', category: 'mob' },
         
         // Music
         { id: 'music_calm1', name: 'calm1.ogg', path: '/sounds/music/calm1.ogg', category: 'music' },
         { id: 'music_creative', name: 'creative.ogg', path: '/sounds/music/creative.ogg', category: 'music' },
         { id: 'music_nether', name: 'nether_theme.ogg', path: '/sounds/music/nether_theme.ogg', category: 'music' },
         
+        // Note sounds
+        { id: 'note_bass', name: 'bass.ogg', path: '/sounds/note/bass.ogg', category: 'note' },
+        { id: 'note_pling', name: 'pling.ogg', path: '/sounds/note/pling.ogg', category: 'note' },
+        
+        // Portal sounds
+        { id: 'portal_portal', name: 'portal.ogg', path: '/sounds/portal/portal.ogg', category: 'portal' },
+        { id: 'portal_travel', name: 'travel.ogg', path: '/sounds/portal/travel.ogg', category: 'portal' },
+        
+        // Random sounds
+        { id: 'random_click', name: 'click.ogg', path: '/sounds/random/click.ogg', category: 'random' },
+        { id: 'random_pop', name: 'pop.ogg', path: '/sounds/random/pop.ogg', category: 'random' },
+        
+        // Records sounds
+        { id: 'records_13', name: '13.ogg', path: '/sounds/records/13.ogg', category: 'records' },
+        { id: 'records_cat', name: 'cat.ogg', path: '/sounds/records/cat.ogg', category: 'records' },
+        
+        // Step sounds
+        { id: 'step_cloth', name: 'cloth.ogg', path: '/sounds/step/cloth.ogg', category: 'step' },
+        { id: 'step_grass', name: 'grass.ogg', path: '/sounds/step/grass.ogg', category: 'step' },
+        
+        // Tile sounds
+        { id: 'tile_piston_in', name: 'piston_in.ogg', path: '/sounds/tile/piston_in.ogg', category: 'tile' },
+        { id: 'tile_piston_out', name: 'piston_out.ogg', path: '/sounds/tile/piston_out.ogg', category: 'tile' },
+        
         // UI sounds
         { id: 'ui_button_click', name: 'button_click.ogg', path: '/sounds/ui/button_click.ogg', category: 'ui' },
         { id: 'ui_inventory_open', name: 'inventory_open.ogg', path: '/sounds/ui/inventory_open.ogg', category: 'ui' },
         { id: 'ui_level_up', name: 'level_up.ogg', path: '/sounds/ui/level_up.ogg', category: 'ui' },
-        
-        // Entity sounds
-        { id: 'entity_zombie_groan', name: 'zombie_groan.ogg', path: '/sounds/entity/zombie_groan.ogg', category: 'entity' },
-        { id: 'entity_cow_moo', name: 'cow_moo.ogg', path: '/sounds/entity/cow_moo.ogg', category: 'entity' },
-        { id: 'entity_chicken_cluck', name: 'chicken_cluck.ogg', path: '/sounds/entity/chicken_cluck.ogg', category: 'entity' },
       ];
 
       setSounds(mockSounds);
@@ -217,10 +277,13 @@ const Index: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
               <div className="w-8 h-8 bg-modrinth-green-500 border-2 border-modrinth-green-600" />
-              Sound Library
+              MC Sounds
             </h1>
-            <div className="text-sm text-muted-foreground">
-              {sounds.length} sounds • {favorites.size} favorites
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                {sounds.length} sounds • {favorites.size} favorites
+              </div>
+              <ThemeSwitch />
             </div>
           </div>
           
@@ -302,7 +365,7 @@ const Index: React.FC = () => {
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-12">
         <div className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-          <p>Sound Library • Built with React & Tailwind CSS</p>
+          <p>MC Sounds • Built with React & Tailwind CSS</p>
           <p className="mt-1">Press Space to pause/resume • Use arrow keys to navigate</p>
         </div>
       </footer>
