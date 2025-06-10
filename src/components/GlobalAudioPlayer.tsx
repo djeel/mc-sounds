@@ -108,7 +108,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
           </button>
         </div>
         <div className="text-xs text-muted-foreground truncate text-center">
-          {current ? current.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : 'Aucun son en cours'}
+          {current ? current.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : 'No sound playing'}
         </div>
       </div>
     </div>

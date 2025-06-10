@@ -79,8 +79,26 @@ const Index: React.FC = () => {
       setFavorites(newFavorites);
     });
 
-    // Simulate loading sound files (in a real app, this would scan the file system)
-    loadSoundData();
+    // Dynamically load categories and sounds
+    const load = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { categories, sounds } = await fetchSoundCategoriesAndFiles();
+        setCategories(categories);
+        setSounds(sounds);
+        // Set first category as active if no favorites
+        if (favorites.size === 0 && categories.length > 0) {
+          setActiveCategory(categories[0] as string);
+        }
+      } catch (err) {
+        setError('Failed to load sound library. Please try again.');
+        console.error('Error loading sounds:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
 
     return () => {
       unsubscribeFavorites();
@@ -88,118 +106,40 @@ const Index: React.FC = () => {
     };
   }, []);
 
-  // Simulate loading sound files from different categories
-  const loadSoundData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock sound data with all the categories from the image
-      const mockSounds: Sound[] = [
-        // Ambient sounds
-        { id: 'ambient_cave', name: 'cave.ogg', path: '/sounds/ambient/cave.ogg', category: 'ambient' },
-        { id: 'ambient_weather_rain', name: 'weather_rain.ogg', path: '/sounds/ambient/weather_rain.ogg', category: 'ambient' },
-        
-        // Block sounds
-        { id: 'block_stone_break', name: 'stone_break.ogg', path: '/sounds/block/stone_break.ogg', category: 'block' },
-        { id: 'block_wood_place', name: 'wood_place.ogg', path: '/sounds/block/wood_place.ogg', category: 'block' },
-        { id: 'block_grass_step', name: 'grass_step.ogg', path: '/sounds/block/grass_step.ogg', category: 'block' },
-        
-        // Damage sounds
-        { id: 'damage_hit', name: 'hit.ogg', path: '/sounds/damage/hit.ogg', category: 'damage' },
-        { id: 'damage_fallbig', name: 'fallbig.ogg', path: '/sounds/damage/fallbig.ogg', category: 'damage' },
-        
-        // Dig sounds
-        { id: 'dig_sand', name: 'sand.ogg', path: '/sounds/dig/sand.ogg', category: 'dig' },
-        { id: 'dig_stone', name: 'stone.ogg', path: '/sounds/dig/stone.ogg', category: 'dig' },
-        
-        // Enchant sounds
-        { id: 'enchant_thorns_hit', name: 'thorns_hit.ogg', path: '/sounds/enchant/thorns_hit.ogg', category: 'enchant' },
-        
-        // Entity sounds
-        { id: 'entity_zombie_groan', name: 'zombie_groan.ogg', path: '/sounds/entity/zombie_groan.ogg', category: 'entity' },
-        { id: 'entity_cow_moo', name: 'cow_moo.ogg', path: '/sounds/entity/cow_moo.ogg', category: 'entity' },
-        
-        // Event sounds
-        { id: 'event_raid_horn', name: 'raid_horn.ogg', path: '/sounds/event/raid_horn.ogg', category: 'event' },
-        
-        // Fire sounds
-        { id: 'fire_fire', name: 'fire.ogg', path: '/sounds/fire/fire.ogg', category: 'fire' },
-        { id: 'fire_ignite', name: 'ignite.ogg', path: '/sounds/fire/ignite.ogg', category: 'fire' },
-        
-        // Fireworks sounds
-        { id: 'fireworks_blast', name: 'blast.ogg', path: '/sounds/fireworks/blast.ogg', category: 'fireworks' },
-        { id: 'fireworks_launch', name: 'launch.ogg', path: '/sounds/fireworks/launch.ogg', category: 'fireworks' },
-        
-        // Item sounds
-        { id: 'item_pickup', name: 'item_pickup.ogg', path: '/sounds/item/pickup.ogg', category: 'item' },
-        { id: 'item_sword_swing', name: 'sword_swing.ogg', path: '/sounds/item/sword_swing.ogg', category: 'item' },
-        { id: 'item_bow_shoot', name: 'bow_shoot.ogg', path: '/sounds/item/bow_shoot.ogg', category: 'item' },
-        
-        // Liquid sounds
-        { id: 'liquid_water', name: 'water.ogg', path: '/sounds/liquid/water.ogg', category: 'liquid' },
-        { id: 'liquid_lava_pop', name: 'lava_pop.ogg', path: '/sounds/liquid/lava_pop.ogg', category: 'liquid' },
-        
-        // Minecart sounds
-        { id: 'minecart_riding', name: 'riding.ogg', path: '/sounds/minecart/riding.ogg', category: 'minecart' },
-        
-        // Mob sounds
-        { id: 'mob_villager_yes', name: 'villager_yes.ogg', path: '/sounds/mob/villager_yes.ogg', category: 'mob' },
-        { id: 'mob_enderman_stare', name: 'enderman_stare.ogg', path: '/sounds/mob/enderman_stare.ogg', category: 'mob' },
-        
-        // Music
-        { id: 'music_calm1', name: 'calm1.ogg', path: '/sounds/music/calm1.ogg', category: 'music' },
-        { id: 'music_creative', name: 'creative.ogg', path: '/sounds/music/creative.ogg', category: 'music' },
-        { id: 'music_nether', name: 'nether_theme.ogg', path: '/sounds/music/nether_theme.ogg', category: 'music' },
-        
-        // Note sounds
-        { id: 'note_bass', name: 'bass.ogg', path: '/sounds/note/bass.ogg', category: 'note' },
-        { id: 'note_pling', name: 'pling.ogg', path: '/sounds/note/pling.ogg', category: 'note' },
-        
-        // Portal sounds
-        { id: 'portal_portal', name: 'portal.ogg', path: '/sounds/portal/portal.ogg', category: 'portal' },
-        { id: 'portal_travel', name: 'travel.ogg', path: '/sounds/portal/travel.ogg', category: 'portal' },
-        
-        // Random sounds
-        { id: 'random_click', name: 'click.ogg', path: '/sounds/random/click.ogg', category: 'random' },
-        { id: 'random_pop', name: 'pop.ogg', path: '/sounds/random/pop.ogg', category: 'random' },
-        
-        // Records sounds
-        { id: 'records_13', name: '13.ogg', path: '/sounds/records/13.ogg', category: 'records' },
-        { id: 'records_cat', name: 'cat.ogg', path: '/sounds/records/cat.ogg', category: 'records' },
-        
-        // Step sounds
-        { id: 'step_cloth', name: 'cloth.ogg', path: '/sounds/step/cloth.ogg', category: 'step' },
-        { id: 'step_grass', name: 'grass.ogg', path: '/sounds/step/grass.ogg', category: 'step' },
-        
-        // Tile sounds
-        { id: 'tile_piston_in', name: 'piston_in.ogg', path: '/sounds/tile/piston_in.ogg', category: 'tile' },
-        { id: 'tile_piston_out', name: 'piston_out.ogg', path: '/sounds/tile/piston_out.ogg', category: 'tile' },
-        
-        // UI sounds
-        { id: 'ui_button_click', name: 'button_click.ogg', path: '/sounds/ui/button_click.ogg', category: 'ui' },
-        { id: 'ui_inventory_open', name: 'inventory_open.ogg', path: '/sounds/ui/inventory_open.ogg', category: 'ui' },
-        { id: 'ui_level_up', name: 'level_up.ogg', path: '/sounds/ui/level_up.ogg', category: 'ui' },
-      ];
-
-      setSounds(mockSounds);
-      
-      const uniqueCategories = Array.from(new Set(mockSounds.map(sound => sound.category))).sort();
-      setCategories(uniqueCategories);
-      
-      // Set first category as active if no favorites
-      if (favorites.size === 0 && uniqueCategories.length > 0) {
-        setActiveCategory(uniqueCategories[0]);
+  // Helper to fetch directory structure from /public/sounds/sounds.json
+  const fetchSoundCategoriesAndFiles = async () => {
+    const res = await fetch('/sounds/sounds.json');
+    const data = await res.json();
+    // Parse categories and sounds
+    const categoriesSet = new Set<string>();
+    const sounds: Sound[] = [];
+    for (const key of Object.keys(data)) {
+      if (!data[key].sounds) continue;
+      // Category is the first part before the dot
+      const cat = key.split('.')[0];
+      categoriesSet.add(cat);
+      for (const entry of data[key].sounds) {
+        // Entry can be a string or object
+        let name: string, relPath: string;
+        if (typeof entry === 'string') {
+          name = entry.split('/').pop() + '.ogg';
+          relPath = entry + '.ogg';
+        } else if (typeof entry === 'object' && entry.name) {
+          name = entry.name.split('/').pop() + '.ogg';
+          relPath = entry.name + '.ogg';
+        } else {
+          continue;
+        }
+        sounds.push({
+          id: relPath.replace(/\.[^/.]+$/, '').replace(/[\/]/g, '_'),
+          name,
+          path: '/sounds/' + relPath,
+          category: cat
+        });
       }
-    } catch (err) {
-      setError('Failed to load sound library. Please try again.');
-      console.error('Error loading sounds:', err);
-    } finally {
-      setIsLoading(false);
     }
+    const categories = Array.from(categoriesSet) as string[];
+    return { categories, sounds };
   };
 
   // Filter sounds based on search term and active category
@@ -353,7 +293,7 @@ const Index: React.FC = () => {
           <h1 className="text-xl font-bold text-foreground mb-2">Error Loading Sounds</h1>
           <p className="text-muted-foreground mb-4">{error}</p>
           <button
-            onClick={loadSoundData}
+            onClick={() => window.location.reload()}
             className="minecraft-button px-4 py-2 bg-primary-green-500 text-white border-primary-green-600 hover:bg-primary-green-600"
           >
             Try Again
