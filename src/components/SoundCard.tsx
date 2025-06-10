@@ -122,9 +122,9 @@ const SoundCard: React.FC<SoundCardProps> = ({
         {/* Favorite button */}
         <button
           onClick={handleFavoriteToggle}
-          className={`minecraft-button p-2 flex items-center justify-center transition-colors
-            ${isFavorite ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground'}
-          `}
+          className={`minecraft-button p-2 flex items-center justify-center transition-colors${
+            isFavorite ? ' active' : ' bg-card text-foreground border-foreground'
+          }`}
           aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           aria-pressed={isFavorite}
         >
