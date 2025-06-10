@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface SearchBarProps {
@@ -14,11 +13,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange }) => 
         placeholder="Search sounds..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full px-4 py-3 pl-10 minecraft-button text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-modrinth-green-500 focus:border-modrinth-green-500"
+        className="w-full px-4 py-3 pl-10 minecraft-button text-foreground placeholder:text-foreground focus:outline-none focus:ring-0 focus:border-primary"
         aria-label="Search sounds"
       />
       <svg
-        className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground"
+        className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"

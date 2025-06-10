@@ -1,129 +1,218 @@
-
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
   :root {
     --background: 255 255 255;
-    --foreground: 15 15 15;
-
+    --foreground: 0 0 0;
     --card: 255 255 255;
-    --card-foreground: 15 15 15;
-
+    --card-foreground: 0 0 0;
     --popover: 255 255 255;
-    --popover-foreground: 15 15 15;
-
-    --primary: 34 197 94;
+    --popover-foreground: 0 0 0;
+    --primary: 27 217 106; /* #1BD96A */
     --primary-foreground: 255 255 255;
-
-    --secondary: 248 250 252;
-    --secondary-foreground: 51 65 85;
-
-    --muted: 241 245 249;
-    --muted-foreground: 71 85 105;
-
-    --accent: 240 253 244;
-    --accent-foreground: 21 128 61;
-
-    --destructive: 239 68 68;
+    --secondary: 255 255 255;
+    --secondary-foreground: 0 0 0;
+    --muted: 255 255 255;
+    --muted-foreground: 0 0 0;
+    --accent: 27 217 106;
+    --accent-foreground: 255 255 255;
+    --destructive: 0 0 0;
     --destructive-foreground: 255 255 255;
-
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 34 197 94;
-
+    --border: 0 0 0; /* noir en light */
+    --input: 255 255 255;
+    --ring: 27 217 106;
     --radius: 0.375rem;
-
-    --sidebar-background: 255 255 255;
-    --sidebar-foreground: 15 15 15;
-    --sidebar-primary: 34 197 94;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 240 253 244;
-    --sidebar-accent-foreground: 21 128 61;
-    --sidebar-border: 226 232 240;
-    --sidebar-ring: 34 197 94;
   }
-
   .dark {
     --background: 0 0 0;
     --foreground: 255 255 255;
-
-    --card: 15 15 15;
+    --card: 0 0 0;
     --card-foreground: 255 255 255;
-
-    --popover: 15 15 15;
+    --popover: 0 0 0;
     --popover-foreground: 255 255 255;
-
-    --primary: 34 197 94;
+    --primary: 27 217 106;
     --primary-foreground: 0 0 0;
-
-    --secondary: 38 38 38;
-    --secondary-foreground: 212 212 212;
-
-    --muted: 26 26 26;
-    --muted-foreground: 163 163 163;
-
-    --accent: 22 101 52;
-    --accent-foreground: 240 253 244;
-
-    --destructive: 220 38 38;
-    --destructive-foreground: 255 255 255;
-
-    --border: 64 64 64;
-    --input: 38 38 38;
-    --ring: 34 197 94;
-
-    --sidebar-background: 0 0 0;
-    --sidebar-foreground: 255 255 255;
-    --sidebar-primary: 34 197 94;
-    --sidebar-primary-foreground: 0 0 0;
-    --sidebar-accent: 22 101 52;
-    --sidebar-accent-foreground: 240 253 244;
-    --sidebar-border: 64 64 64;
-    --sidebar-ring: 34 197 94;
+    --secondary: 0 0 0;
+    --secondary-foreground: 255 255 255;
+    --muted: 0 0 0;
+    --muted-foreground: 255 255 255;
+    --accent: 27 217 106;
+    --accent-foreground: 0 0 0;
+    --destructive: 255 255 255;
+    --destructive-foreground: 0 0 0;
+    --border: 255 255 255; /* blanc en dark */
+    --input: 0 0 0;
+    --ring: 27 217 106;
+    --radius: 0.375rem;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground font-mono;
-  }
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: 'JetBrains Mono', monospace;
 }
 
-@layer components {
-  .minecraft-button {
-    @apply relative bg-card border-2 border-border hover:bg-accent transition-all duration-150 active:scale-95;
-    box-shadow: 0 2px 0 0 hsl(var(--border));
-  }
-  
-  .minecraft-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 0 0 hsl(var(--border));
-  }
-  
-  .minecraft-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 0 0 hsl(var(--border));
-  }
+/* Boutons et éléments interactifs */
+.minecraft-button {
+  position: relative;
+  background-color: rgb(var(--card));
+  border: 1px solid rgb(var(--foreground)); /* réduit de 2px à 1px */
+  color: rgb(var(--foreground));
+  transition: all 0.15s;
+  box-shadow: none;
+  cursor: pointer;
+}
+.minecraft-button:hover,
+.minecraft-button:focus {
+  background-color: rgb(var(--primary));
+  color: #fff;
+  border-color: rgb(var(--foreground)); /* toujours noir/blanc */
+  box-shadow: none;
+}
+.minecraft-button:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+.minecraft-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: rgb(var(--card));
+  color: rgb(var(--foreground));
+  border-color: rgb(var(--foreground));
+}
+.minecraft-button:disabled:hover,
+.minecraft-button:disabled:focus {
+  background-color: rgb(var(--card));
+  color: rgb(var(--foreground));
+  border-color: rgb(var(--foreground));
+  transform: none;
+}
 
-  .sound-card {
-    @apply minecraft-button p-4 space-y-3 hover:border-primary;
-  }
+.sound-card {
+  padding: 1rem;
+  border-radius: 0;
+  background: rgb(var(--card));
+  color: rgb(var(--card-foreground));
+  border: 1px solid rgb(var(--foreground)); /* réduit de 2px à 1px */
+  transition: border-color 0.15s;
+  box-shadow: none;
+}
+.sound-card:hover {
+  border-color: rgb(var(--foreground));
+}
 
-  .tab-button {
-    @apply minecraft-button px-4 py-2 text-sm font-medium;
-  }
+.tab-button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 0;
+  background: rgb(var(--card));
+  color: rgb(var(--foreground));
+  border: 1px solid rgb(var(--foreground)); /* réduit de 2px à 1px */
+  transition: all 0.15s;
+  box-shadow: none;
+}
+.tab-button.active,
+.tab-button:focus,
+.tab-button:hover {
+  background: rgb(var(--primary));
+  color: #fff;
+  border-color: rgb(var(--foreground));
+  box-shadow: none;
+}
+.tab-button:active {
+  background: rgb(var(--primary));
+  color: #fff;
+  border-color: rgb(var(--foreground));
+  box-shadow: none;
+}
 
-  .tab-button.active {
-    @apply bg-primary text-primary-foreground border-primary;
-  }
+/* Placeholder et input */
+input,
+textarea {
+  background: rgb(var(--input));
+  color: rgb(var(--foreground));
+  border: 1px solid rgb(var(--foreground)); /* réduit de 2px à 1px */
+  border-radius: 0;
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgb(var(--foreground));
+  opacity: 0.6;
+}
+
+/* Accent, focus, etc. */
+:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Icônes et strokes : noir/blanc selon le thème, jamais vert */
+svg, .icon {
+  stroke: #000 !important;
+  color: #000 !important;
+}
+.dark svg, .dark .icon {
+  stroke: #fff !important;
+  color: #fff !important;
+}
+
+/* Les éléments cliquables (boutons, tabs, etc.) passent en vert au hover/focus/active mais gardent un contour noir/blanc */
+.bg-primary {
+  background-color: #1BD96A !important;
+  border-radius: 0 !important;
+}
+.text-primary {
+  color: #1BD96A !important;
+}
+.border-primary {
+  border-color: rgb(var(--foreground)) !important;
+}
+
+/* Suppression des arrondis et ombres globalement */
+* {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.minecraft-button, .sound-card {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Pour le carré du header */
+.bg-primary {
+  border-radius: 0 !important;
+}
+
+/* Bouton toggle theme personnalisé */
+.theme-toggle-button {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--foreground)); /* réduit de 2px à 1px */
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.theme-toggle-button:hover {
+  background: rgb(var(--primary));
+}
+
+.theme-toggle-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  background: rgb(var(--foreground));
+  transition: transform 0.15s;
+  transform: translateX(0);
+}
+.theme-toggle-thumb.checked {
+  transform: translateX(1.25rem);
+  background: #000;
 }

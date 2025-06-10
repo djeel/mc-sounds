@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SearchBar from '../components/SearchBar';
 import CategoryTabs from '../components/CategoryTabs';
 import SoundCard from '../components/SoundCard';
-import GlobalAudioPlayer from '../components/GlobalAudioPlayer';
-import SequentialPlayer from '../components/SequentialPlayer';
+import UnifiedAudioPlayer from '../components/GlobalAudioPlayer';
 import ThemeSwitch from '../components/ThemeSwitch';
 import { AudioManager } from '../utils/audioManager';
 import { FavoritesManager } from '../utils/favoritesManager';
@@ -27,6 +26,9 @@ const Index: React.FC = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [audioQueue, setAudioQueue] = useState<Sound[]>([]);
+  const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(0);
+  const [isLooping, setIsLooping] = useState<boolean>(false);
 
   // Handle playing a sound
   const handlePlaySound = useCallback(async (soundPath: string, soundId: string) => {
@@ -266,6 +268,72 @@ const Index: React.FC = () => {
     return queueInfo ? queueInfo.category : undefined;
   }, [getQueueInfo]);
 
+  // Gestion de la queue pour UnifiedAudioPlayer
+  useEffect(() => {
+    // Si on est en mode séquentiel, la queue est la séquence de la catégorie
+    if (isSequentialMode) {
+      const queueInfo = getQueueInfo();
+      if (queueInfo) {
+        const categorySounds = sounds.filter(s => s.category === queueInfo.category);
+        setAudioQueue(categorySounds);
+        setCurrentQueueIndex(queueInfo.current);
+        return;
+      }
+    }
+    // Sinon, la queue contient juste le son en cours s'il y en a un
+    if (currentPlayingSound) {
+      const sound = sounds.find(s => s.id === currentPlayingSound);
+      if (sound) {
+        setAudioQueue([sound]);
+        setCurrentQueueIndex(0);
+        return;
+      }
+    }
+    setAudioQueue([]);
+    setCurrentQueueIndex(0);
+  }, [isSequentialMode, getQueueInfo, currentPlayingSound, sounds]);
+
+  // Logique play/pause/next/prev/loop pour UnifiedAudioPlayer
+  const handlePlayPause = useCallback(() => {
+    const audioManager = AudioManager.getInstance();
+    if (isPlaying) {
+      if (isPaused) {
+        audioManager.resumeCurrent();
+      } else {
+        audioManager.pauseCurrent();
+      }
+    } else if (audioQueue.length > 0) {
+      audioManager.playSound(audioQueue[currentQueueIndex].path, audioQueue[currentQueueIndex].id);
+    }
+  }, [isPlaying, isPaused, audioQueue, currentQueueIndex]);
+
+  const handleNext = useCallback(() => {
+    if (audioQueue.length > 1 && currentQueueIndex < audioQueue.length - 1) {
+      const nextIndex = currentQueueIndex + 1;
+      setCurrentQueueIndex(nextIndex);
+      const audioManager = AudioManager.getInstance();
+      audioManager.playSound(audioQueue[nextIndex].path, audioQueue[nextIndex].id);
+    } else if (isLooping && audioQueue.length > 0) {
+      setCurrentQueueIndex(0);
+      const audioManager = AudioManager.getInstance();
+      audioManager.playSound(audioQueue[0].path, audioQueue[0].id);
+    }
+  }, [audioQueue, currentQueueIndex, isLooping]);
+
+  const handlePrev = useCallback(() => {
+    if (audioQueue.length > 1 && currentQueueIndex > 0) {
+      const prevIndex = currentQueueIndex - 1;
+      setCurrentQueueIndex(prevIndex);
+      const audioManager = AudioManager.getInstance();
+      audioManager.playSound(audioQueue[prevIndex].path, audioQueue[prevIndex].id);
+    } else if (isLooping && audioQueue.length > 0) {
+      const lastIndex = audioQueue.length - 1;
+      setCurrentQueueIndex(lastIndex);
+      const audioManager = AudioManager.getInstance();
+      audioManager.playSound(audioQueue[lastIndex].path, audioQueue[lastIndex].id);
+    }
+  }, [audioQueue, currentQueueIndex, isLooping]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -302,11 +370,11 @@ const Index: React.FC = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary border-2 border-primary" />
+              <div className="w-8 h-8 bg-primary border-2 border-primary rounded" aria-label="Logo carré vert" />
               MC Sounds
             </h1>
             <div className="flex items-center gap-4">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-foreground">
                 {sounds.length} sounds • {favorites.size} favorites
               </div>
               <ThemeSwitch />
@@ -374,30 +442,25 @@ const Index: React.FC = () => {
         </div>
       </main>
 
-      {/* Global audio player */}
-      <GlobalAudioPlayer
-        currentSound={getCurrentSoundName()}
+      {/* Unified audio player */}
+      <UnifiedAudioPlayer
+        queue={audioQueue}
+        currentIndex={currentQueueIndex}
         isPlaying={isPlaying}
         isPaused={isPaused}
-        currentSoundId={currentPlayingSound}
-        isFavorite={currentPlayingSound ? favorites.has(currentPlayingSound) : false}
+        isLooping={isLooping}
+        onPlayPause={handlePlayPause}
+        onPrev={handlePrev}
+        onNext={handleNext}
         onStop={handleStopSound}
-        onPause={handlePauseSound}
-        onResume={handleResumeSound}
-        onRewind={handleRewindSound}
+        onToggleLoop={() => setIsLooping(l => !l)}
         onToggleFavorite={handleToggleFavorite}
-      />
-
-      {/* Sequential player */}
-      <SequentialPlayer
-        isVisible={isSequentialMode}
-        queueInfo={getQueueInfo()}
-        onStop={stopSequentialPlay}
+        favorites={favorites}
       />
       
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-12">
-        <div className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-4 py-6 text-center text-sm text-foreground">
           <p>MC Sounds • Built with React & Tailwind CSS</p>
           <p className="mt-1">Press Space to pause/resume • Use arrow keys to navigate</p>
         </div>
