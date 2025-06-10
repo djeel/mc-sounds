@@ -29,6 +29,7 @@ const Index: React.FC = () => {
   const [audioQueue, setAudioQueue] = useState<Sound[]>([]);
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(0);
   const [isLooping, setIsLooping] = useState<boolean>(false);
+  const mainContentRef = React.useRef<HTMLDivElement>(null);
 
   // Handle playing a sound
   const handlePlaySound = useCallback(async (soundPath: string, soundId: string) => {
@@ -269,9 +270,13 @@ const Index: React.FC = () => {
     }
   }, [audioQueue, currentQueueIndex, isLooping]);
 
-  // When changing category, force update filteredSounds immediately
+  // Replace direct setActiveCategory with a callback for instant refresh
   const handleCategoryChange = useCallback((category: string) => {
     setActiveCategory(category);
+    // Scroll the window to the top when category changes
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 0);
   }, []);
 
   if (isLoading) {
@@ -337,8 +342,9 @@ const Index: React.FC = () => {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto px-4 py-6">
-        <div 
+      <main ref={mainContentRef} className="container mx-auto px-4 py-6">
+        <div
+          key={activeCategory} // Force remount on category change
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
           role="tabpanel"
           id={`panel-${activeCategory}`}
