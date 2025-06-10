@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SearchBar from '../components/SearchBar';
 import CategoryTabs from '../components/CategoryTabs';
 import SoundCard from '../components/SoundCard';
 import GlobalAudioPlayer from '../components/GlobalAudioPlayer';
+import SequentialPlayer from '../components/SequentialPlayer';
 import { AudioManager } from '../utils/audioManager';
 import { FavoritesManager } from '../utils/favoritesManager';
+import { useSequentialPlay } from '../hooks/useSequentialPlay';
 
 interface Sound {
   id: string;
@@ -24,6 +25,24 @@ const Index: React.FC = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle playing a sound
+  const handlePlaySound = useCallback(async (soundPath: string, soundId: string) => {
+    const audioManager = AudioManager.getInstance();
+    await audioManager.playSound(soundPath, soundId);
+  }, []);
+
+  // Sequential play hook
+  const {
+    isSequentialMode,
+    startSequentialPlay,
+    stopSequentialPlay,
+    getQueueInfo
+  } = useSequentialPlay({
+    sounds,
+    onPlaySound: handlePlaySound,
+    currentPlayingSound
+  });
 
   // Initialize managers and load data
   useEffect(() => {
@@ -136,17 +155,12 @@ const Index: React.FC = () => {
     return filtered;
   }, [sounds, searchTerm, activeCategory, favorites]);
 
-  // Handle playing a sound
-  const handlePlaySound = useCallback(async (soundPath: string, soundId: string) => {
-    const audioManager = AudioManager.getInstance();
-    await audioManager.playSound(soundPath, soundId);
-  }, []);
-
   // Handle stopping current sound
   const handleStopSound = useCallback(() => {
     const audioManager = AudioManager.getInstance();
     audioManager.stopCurrent();
-  }, []);
+    stopSequentialPlay(); // Also stop sequential play
+  }, [stopSequentialPlay]);
 
   // Handle toggling favorites
   const handleToggleFavorite = useCallback((soundId: string) => {
@@ -159,6 +173,12 @@ const Index: React.FC = () => {
     const sound = sounds.find(s => s.id === currentPlayingSound);
     return sound ? sound.name : null;
   }, [currentPlayingSound, sounds]);
+
+  // Get current sequential category
+  const currentSequentialCategory = useMemo(() => {
+    const queueInfo = getQueueInfo();
+    return queueInfo ? queueInfo.category : undefined;
+  }, [getQueueInfo]);
 
   if (isLoading) {
     return (
@@ -211,6 +231,10 @@ const Index: React.FC = () => {
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
             favoritesCount={favorites.size}
+            onPlayCategory={startSequentialPlay}
+            isSequentialMode={isSequentialMode}
+            onStopSequential={stopSequentialPlay}
+            currentSequentialCategory={currentSequentialCategory}
           />
         </div>
       </header>
@@ -266,6 +290,13 @@ const Index: React.FC = () => {
         currentSound={getCurrentSoundName()}
         isPlaying={isPlaying}
         onStop={handleStopSound}
+      />
+
+      {/* Sequential player */}
+      <SequentialPlayer
+        isVisible={isSequentialMode}
+        queueInfo={getQueueInfo()}
+        onStop={stopSequentialPlay}
       />
       
       {/* Footer */}
