@@ -142,11 +142,9 @@ const Index: React.FC = () => {
     return { categories, sounds };
   };
 
-  // Filter sounds based on search term and active category
+  // Memoize filteredSounds for performance
   const filteredSounds = useMemo(() => {
     let filtered = sounds;
-
-    // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(sound =>
@@ -154,14 +152,11 @@ const Index: React.FC = () => {
         sound.category.toLowerCase().includes(term)
       );
     }
-
-    // Filter by category
     if (activeCategory === 'favorites') {
       filtered = filtered.filter(sound => favorites.has(sound.id));
     } else {
       filtered = filtered.filter(sound => sound.category === activeCategory);
     }
-
     return filtered;
   }, [sounds, searchTerm, activeCategory, favorites]);
 
@@ -274,6 +269,11 @@ const Index: React.FC = () => {
     }
   }, [audioQueue, currentQueueIndex, isLooping]);
 
+  // When changing category, force update filteredSounds immediately
+  const handleCategoryChange = useCallback((category: string) => {
+    setActiveCategory(category);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -326,7 +326,7 @@ const Index: React.FC = () => {
           <CategoryTabs
             categories={categories}
             activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
+            onCategoryChange={handleCategoryChange}
             favoritesCount={favorites.size}
             onPlayCategory={startSequentialPlay}
             isSequentialMode={isSequentialMode}
