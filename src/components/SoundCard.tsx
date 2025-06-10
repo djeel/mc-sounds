@@ -10,6 +10,7 @@ interface SoundCardProps {
   isFavorite: boolean;
   onPlay: (soundPath: string, soundId: string) => void;
   onToggleFavorite: (soundId: string) => void;
+  disableAnimation?: boolean;
 }
 
 const SoundCard: React.FC<SoundCardProps> = ({
@@ -21,6 +22,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
   isFavorite,
   onPlay,
   onToggleFavorite,
+  disableAnimation,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
   };
 
   return (
-    <div className="sound-card animate-fade-in">
+    <div className={`sound-card${disableAnimation ? '' : ' animate-fade-in'}`}>
       {/* Sound info */}
       <div className="mb-3">
         <h3 className="font-semibold text-foreground text-sm mb-1 leading-tight">

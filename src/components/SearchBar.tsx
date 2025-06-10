@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 interface SearchBarProps {
   searchTerm: string;
@@ -6,9 +6,16 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) inputRef.current.focus();
+  }, []);
+
   return (
     <div className="relative mb-6">
       <input
+        ref={inputRef}
         type="text"
         placeholder="Search sounds..."
         value={searchTerm}

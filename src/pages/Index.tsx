@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useDeferredValue } from 'react';
 import SearchBar from '../components/SearchBar';
 import CategoryTabs from '../components/CategoryTabs';
 import SoundCard from '../components/SoundCard';
@@ -151,23 +151,48 @@ const Index: React.FC = () => {
     return { categories, sounds };
   };
 
+  // Utilitaire pour formater le nom comme dans SoundCard
+  const formatSoundName = (filename: string): string => {
+    return filename
+      .replace(/\.[^/.]+$/, '') // Remove extension
+      .replace(/[_-]/g, ' ') // Replace underscores and hyphens with spaces
+      .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
+  };
+
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+
   // Memoize filteredSounds for performance
   const filteredSounds = useMemo(() => {
-    let filtered = sounds;
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(sound =>
-        sound.name.toLowerCase().includes(term) ||
-        sound.category.toLowerCase().includes(term)
-      );
+    const term = deferredSearchTerm.trim().toLowerCase();
+    if (!term) {
+      // Pas de recherche : filtrage classique par catégorie ou favoris
+      if (activeCategory === 'favorites') {
+        return sounds.filter(sound => favorites.has(sound.id));
+      } else {
+        return sounds.filter(sound => sound.category === activeCategory);
+      }
     }
-    if (activeCategory === 'favorites') {
-      filtered = filtered.filter(sound => favorites.has(sound.id));
-    } else {
-      filtered = filtered.filter(sound => sound.category === activeCategory);
-    }
-    return filtered;
-  }, [sounds, searchTerm, activeCategory, favorites]);
+    // Recherche globale : tous les sons qui matchent le nom formaté ou la catégorie
+    // On calcule un score de pertinence pour chaque son
+    const scored = sounds.map(sound => {
+      const formattedName = formatSoundName(sound.name).toLowerCase();
+      const cat = sound.category.toLowerCase();
+      let score = 0;
+      if (formattedName === term || cat === term) {
+        score = 100; // Exact match
+      } else if (formattedName.startsWith(term) || cat.startsWith(term)) {
+        score = 75; // Starts with
+      } else if (formattedName.includes(term) || cat.includes(term)) {
+        score = 50; // Includes
+      } else {
+        score = 0;
+      }
+      return { sound, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.sound.name.localeCompare(b.sound.name));
+    return scored.map(({ sound }) => sound);
+  }, [sounds, deferredSearchTerm, activeCategory, favorites]);
 
   // Handle stopping current sound
   const handleStopSound = useCallback(() => {
@@ -352,7 +377,7 @@ const Index: React.FC = () => {
       {/* Main content */}
       <main ref={mainContentRef} className="container mx-auto px-4 py-6">
         <div
-          key={activeCategory} // Force remount on category change
+          key={activeCategory + '-' + deferredSearchTerm}
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
           role="tabpanel"
           id={`panel-${activeCategory}`}
@@ -370,26 +395,29 @@ const Index: React.FC = () => {
                 isFavorite={favorites.has(sound.id)}
                 onPlay={handlePlaySound}
                 onToggleFavorite={handleToggleFavorite}
+                disableAnimation={!!deferredSearchTerm}
               />
             ))
           ) : (
             <div className="col-span-full text-center py-12">
               <div className="text-muted-foreground text-4xl mb-4">🔍</div>
               <h2 className="text-lg font-semibold text-foreground mb-2">
-                {activeCategory === 'favorites' 
-                  ? favorites.size === 0 
-                    ? "No favorites yet" 
-                    : "No favorite sounds match your search"
-                  : searchTerm 
-                    ? "No sounds found" 
-                    : "No sounds in this category"}
+                {deferredSearchTerm.trim()
+                  ? "No sounds found"
+                  : activeCategory === 'favorites' && favorites.size === 0
+                    ? "No favorites yet"
+                    : activeCategory === 'favorites'
+                      ? "No favorite sounds match your search"
+                      : "No sounds in this category"}
               </h2>
               <p className="text-foreground">
-                {activeCategory === 'favorites' && favorites.size === 0
-                  ? "Start adding sounds to your favorites by clicking the heart icon"
-                  : searchTerm
-                    ? "Try adjusting your search terms"
-                    : "This category appears to be empty"}
+                {deferredSearchTerm.trim()
+                  ? "Try adjusting your search terms"
+                  : activeCategory === 'favorites' && favorites.size === 0
+                    ? "Start adding sounds to your favorites by clicking the heart icon"
+                    : activeCategory === 'favorites'
+                      ? "You have no favorite sounds in this category"
+                      : "This category appears to be empty"}
               </p>
             </div>
           )}
