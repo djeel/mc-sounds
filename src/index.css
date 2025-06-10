@@ -70,7 +70,8 @@ body {
 }
 
 /* Boutons et éléments interactifs */
-.minecraft-button {
+.minecraft-button,
+button.minecraft-button {
   position: relative;
   background-color: rgb(var(--card));
   border: 1px solid rgb(var(--foreground)); /* réduit de 2px à 1px */
@@ -80,11 +81,20 @@ body {
   cursor: pointer;
 }
 .minecraft-button:hover,
-.minecraft-button:focus {
-  background-color: rgb(var(--primary));
-  color: #fff;
-  border-color: rgb(var(--foreground)); /* toujours noir/blanc */
-  box-shadow: none;
+.minecraft-button:focus,
+button.minecraft-button:hover,
+button.minecraft-button:focus {
+  background-color: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
+}
+.dark .minecraft-button:hover,
+.dark .minecraft-button:focus,
+.dark button.minecraft-button:hover,
+.dark button.minecraft-button:focus {
+  background-color: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
 }
 .minecraft-button:active {
   transform: translateY(1px);
@@ -103,6 +113,16 @@ body {
   color: rgb(var(--foreground));
   border-color: rgb(var(--foreground));
   transform: none;
+}
+.dark .minecraft-button.active {
+  background: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
+}
+.minecraft-button.active {
+  background: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
 }
 
 .sound-card {
@@ -136,6 +156,11 @@ body {
   color: #fff;
   border-color: rgb(var(--foreground));
   box-shadow: none;
+}
+.dark .tab-button.active {
+  background: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
 }
 .tab-button:active {
   background: rgb(var(--primary));
@@ -248,4 +273,26 @@ header, footer, .bg-card, .bg-popover, .bg-muted, .bg-accent, .bg-primary {
   background-color: #000 !important;
   border-color: rgb(var(--border)) !important;
   outline: none !important;
+}
+
+/* Global button hover/focus for all site buttons (including tabs, header, etc.) */
+button:not(.minecraft-button):hover,
+button:not(.minecraft-button):focus,
+.tab-button:hover,
+.tab-button:focus,
+[role=button]:hover,
+[role=button]:focus {
+  background-color: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
+}
+.dark button:not(.minecraft-button):hover,
+.dark button:not(.minecraft-button):focus,
+.dark .tab-button:hover,
+.dark .tab-button:focus,
+.dark [role=button]:hover,
+.dark [role=button]:focus {
+  background-color: rgb(var(--primary)) !important;
+  color: #fff !important;
+  border-color: rgb(var(--primary-green-600, 22,163,74)) !important;
 }

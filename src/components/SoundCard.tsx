@@ -66,7 +66,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
   };
 
   return (
-    <div className={`sound-card${disableAnimation ? '' : ' animate-fade-in'}`}>
+    <div className={`sound-card${disableAnimation ? '' : ' animate-fade-in'} flex flex-col justify-between h-full`}>
       {/* Sound info */}
       <div className="mb-3">
         <h3 className="font-semibold text-foreground text-sm mb-1 leading-tight">
@@ -84,17 +84,18 @@ const SoundCard: React.FC<SoundCardProps> = ({
       )}
 
       {/* Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-auto pt-2">
         <div className="flex items-center gap-2">
           {/* Play button */}
           <button
             onClick={handlePlay}
             disabled={isLoading}
-            className={`minecraft-button p-2 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary-green-500
-              ${isPlaying ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground hover:bg-accent'}
+            className={`minecraft-button p-2 flex items-center justify-center transition-colors
+              ${isPlaying ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground'}
               ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
             `}
             aria-label={isPlaying ? 'Currently playing' : 'Play sound'}
+            style={{ color: 'inherit' }}
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -102,6 +103,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
               <Play 
                 className={`w-4 h-4 ${isPlaying ? 'animate-pulse-green' : ''}`} 
                 fill={isPlaying ? 'currentColor' : 'none'}
+                stroke="currentColor"
               />
             )}
           </button>
@@ -109,20 +111,19 @@ const SoundCard: React.FC<SoundCardProps> = ({
           {/* Download button */}
           <button
             onClick={handleDownload}
-            className={`minecraft-button p-2 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary-green-500
-              bg-card text-foreground border-foreground hover:bg-accent
-            `}
+            className="minecraft-button p-2 flex items-center justify-center transition-colors bg-card text-foreground border-foreground"
             aria-label="Download sound"
+            style={{ color: 'inherit' }}
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4" stroke="currentColor" />
           </button>
         </div>
 
         {/* Favorite button */}
         <button
           onClick={handleFavoriteToggle}
-          className={`minecraft-button p-2 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-primary-green-500
-            ${isFavorite ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground hover:bg-accent'}
+          className={`minecraft-button p-2 flex items-center justify-center transition-colors
+            ${isFavorite ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground'}
           `}
           aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           aria-pressed={isFavorite}

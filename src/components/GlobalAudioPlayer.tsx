@@ -51,15 +51,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
               className={`flex items-center gap-2 px-2 py-1 rounded transition-colors ${idx === currentIndex ? 'bg-primary/20 font-bold' : ''}`}
             >
               <span className="truncate flex-1">{item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}</span>
-              {onToggleFavorite && (
-                <button
-                  onClick={() => onToggleFavorite(item.id)}
-                  className={`p-1 rounded ${favorites.has(item.id) ? 'text-primary' : 'text-muted-foreground'}`}
-                  aria-label="Toggle favorite"
-                >
-                  <Heart className="w-4 h-4" fill={favorites.has(item.id) ? 'currentColor' : 'none'} />
-                </button>
-              )}
+              {/* Le bouton de like est retiré d'ici */}
             </div>
           ))}
         </div>
@@ -90,7 +82,8 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
             disabled={!hasQueue}
           >
             <SkipForward className="w-4 h-4" />
-          </button>          <button 
+          </button>
+          <button 
             onClick={onToggleLoop} 
             className={`minecraft-button p-2 ${isLooping ? 'bg-primary text-primary-foreground border-primary' : ''}`} 
             aria-label="Loop"
@@ -98,6 +91,18 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
           >
             <Repeat className="w-4 h-4" />
           </button>
+          {/* Bouton de like pour le son courant, à côté du bouton loop */}
+          {onToggleFavorite && (
+            <button
+              onClick={() => current && onToggleFavorite(current.id)}
+              className={`minecraft-button p-2 ${favorites.has(current?.id) ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-foreground'}`}
+              aria-label={favorites.has(current?.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              aria-pressed={favorites.has(current?.id)}
+              disabled={!hasQueue}
+            >
+              <Heart className="w-4 h-4" fill={favorites.has(current?.id) ? 'currentColor' : 'none'} stroke="currentColor" />
+            </button>
+          )}
           <button 
             onClick={onStop} 
             className="minecraft-button p-2 bg-destructive text-destructive-foreground border-destructive" 
