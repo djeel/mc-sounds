@@ -129,9 +129,9 @@ const SoundCard: React.FC<SoundCardProps> = ({
           aria-pressed={isFavorite}
         >
           <svg 
-            className="w-4 h-4" 
-            fill={isFavorite ? 'currentColor' : 'none'} 
-            stroke="currentColor" 
+            className="w-4 h-4"
+            fill={isFavorite ? 'currentColor' : 'none'}
+            stroke="currentColor"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
