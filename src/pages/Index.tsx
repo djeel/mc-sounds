@@ -88,8 +88,16 @@ const Index: React.FC = () => {
         const { categories, sounds } = await fetchSoundCategoriesAndFiles();
         setCategories(categories);
         setSounds(sounds);
+        // Nettoie les favoris invalides uniquement dans le localStorage, ne touche pas au state local ici
+        const validIds = new Set(sounds.map(s => s.id));
+        const currentFavorites = FavoritesManager.getFavorites();
+        currentFavorites.forEach(id => {
+          if (!validIds.has(id)) {
+            FavoritesManager.removeFavorite(id);
+          }
+        });
         // Set first category as active if no favorites
-        if (favorites.size === 0 && categories.length > 0) {
+        if (FavoritesManager.getFavorites().size === 0 && categories.length > 0) {
           setActiveCategory(categories[0] as string);
         }
       } catch (err) {
