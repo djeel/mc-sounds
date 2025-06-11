@@ -248,9 +248,11 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
           }}
         >
           {isMinimized ? (
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M4 12h12M4 8h12" strokeWidth="2" strokeLinecap="round"/></svg>
+            // Chevron haut (agrandir)
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 12l4-4 4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           ) : (
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 10h8" strokeWidth="2" strokeLinecap="round"/></svg>
+            // Chevron bas (minimiser)
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 8l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           )}
         </button>
       </div>
