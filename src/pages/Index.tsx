@@ -431,7 +431,7 @@ const Index: React.FC = () => {
             </div>
             <div className="w-full lg:w-[400px]">
               {/* On remet le Droppable ici si besoin d'un drop sur la colonne, mais SANS highlight ni style drag-over */}
-              <div className="sticky top-24 z-30" style={{ minHeight: 220 }}>
+              {/* <div className="sticky top-24 z-30" style={{ minHeight: 220 }}>
                 <UnifiedAudioPlayer
                   queue={audioQueue}
                   currentIndex={currentQueueIndex}
@@ -448,7 +448,7 @@ const Index: React.FC = () => {
                   onSelectIndex={setCurrentQueueIndex}
                   isDragging={isDragging}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </main>
