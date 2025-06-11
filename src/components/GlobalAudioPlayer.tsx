@@ -298,7 +298,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
           {/* Zone des boutons + barre de progression toujours en bas */}
           <div className="flex flex-col mt-auto w-full" style={{position: 'relative'}}>
             {/* Custom controls alignés en bas */}
-            <div className="flex items-center justify-center gap-3 w-full" style={{}}>
+            <div className="flex items-center justify-start gap-3 w-full" style={{}}>
               <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
                 <SkipBack size={20} />
               </button>
