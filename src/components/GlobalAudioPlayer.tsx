@@ -302,17 +302,17 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
               <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
                 <SkipBack size={20} />
               </button>
-              <button className="minecraft-button p-2" onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
+              <button className={`minecraft-button p-2${isPlaying && !isPaused ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
                 {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
               </button>
-              <button className="minecraft-button p-2" onClick={handleStop} aria-label="Stop">
+              <button className={`minecraft-button p-2${!isPlaying && !isPaused && current ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleStop} aria-label="Stop">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
               </button>
-              <button className={`minecraft-button p-2 ${isLooping ? 'bg-green-600 text-white' : ''}`} onClick={handleToggleLoop} aria-label="Loop">
+              <button className={`minecraft-button p-2 ${isLooping ? 'active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleToggleLoop} aria-label="Loop">
                 <Repeat size={20} />
               </button>
               {onToggleFavorite && (
-                <button className={`minecraft-button p-2 ${favorites.has(current?.id) ? 'text-red-500' : ''}`} onClick={() => current && onToggleFavorite(current.id)} aria-label="Favori">
+                <button className={`minecraft-button p-2${favorites.has(current?.id) ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={() => current && onToggleFavorite(current.id)} aria-label="Favori">
                   <Heart size={20} fill={favorites.has(current?.id) ? 'currentColor' : 'none'} />
                 </button>
               )}
