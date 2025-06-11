@@ -66,7 +66,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
   };
 
   return (
-    <div className={`sound-card${disableAnimation ? '' : ' animate-fade-in'} flex flex-col justify-between h-full`}>
+    <div className={`sound-card${disableAnimation ? '' : ' animate-fade-in'} flex flex-col justify-between h-full`} style={{height: '100%'}}>
       {/* Sound info */}
       <div className="mb-3">
         <h3 className="font-semibold text-foreground text-sm mb-1 leading-tight">

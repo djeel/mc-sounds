@@ -1,12 +1,13 @@
 import React from 'react';
 import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
+import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 
 interface VirtualizedSoundGridProps {
   sounds: any[];
   columnCount: number;
   rowHeight: number;
   columnWidth: number;
-  renderSound: (sound: any, idx: number) => React.ReactNode;
+  renderDraggable: (sound: any, idx: number, cellStyle: React.CSSProperties, columnIndex: number) => React.ReactNode;
 }
 
 const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
@@ -14,31 +15,17 @@ const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
   columnCount,
   rowHeight,
   columnWidth,
-  renderSound,
+  renderDraggable,
 }) => {
   const rowCount = Math.ceil(sounds.length / columnCount);
 
   const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
     const idx = rowIndex * columnCount + columnIndex;
     if (idx >= sounds.length) return null;
-    // On force la taille de la cellule pour garantir une hauteur et largeur fixes
-    const cellStyle = {
-      ...style,
-      left: style.left,
-      top: style.top,
-      width: columnWidth,
-      height: rowHeight,
-      paddingLeft: columnIndex === 0 ? 0 : 16,
-      boxSizing: 'border-box',
-      display: 'flex',
-      alignItems: 'stretch',
-      justifyContent: 'stretch',
-    };
+    // On applique le style react-window sur le conteneur racine
     return (
-      <div style={cellStyle}>
-        <div style={{ width: '100%', height: '100%' }}>
-          {renderSound(sounds[idx], idx)}
-        </div>
+      <div style={{ ...style, boxSizing: 'border-box' }}>
+        {renderDraggable(sounds[idx], idx, { width: '100%', height: '100%' }, columnIndex)}
       </div>
     );
   };
