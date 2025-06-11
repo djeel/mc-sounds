@@ -418,6 +418,7 @@ const Index: React.FC = () => {
                         if (s) handlePlaySound(s);
                       }}
                       onToggleFavorite={handleToggleFavorite}
+                      isPaused={isPaused} // Ajouté
                     />
                     {orderedSounds.length === 0 && (
                       <div className="col-span-full text-center py-6 text-muted-foreground">

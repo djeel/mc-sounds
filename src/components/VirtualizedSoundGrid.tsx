@@ -12,6 +12,7 @@ interface VirtualizedSoundGridProps {
   isFavorite: (soundId: string) => boolean;
   onPlay: (soundPath: string, soundId: string) => void;
   onToggleFavorite: (soundId: string) => void;
+  isPaused: boolean; // Ajouté pour synchroniser l'état pause
 }
 
 const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
@@ -23,6 +24,7 @@ const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
   isFavorite,
   onPlay,
   onToggleFavorite,
+  isPaused, // Ajouté
 }) => {
   const rowCount = Math.ceil(sounds.length / columnCount);
 
@@ -49,6 +51,7 @@ const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
               isFavorite={isFavorite(sound.id)}
               onPlay={onPlay}
               onToggleFavorite={onToggleFavorite}
+              isPaused={isPaused} // Ajouté
             />
           </div>
         )}

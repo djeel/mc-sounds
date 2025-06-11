@@ -317,9 +317,12 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                   <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
                     <SkipBack size={20} />
                   </button>
-                  <button className={`minecraft-button p-2${isPlaying && !isPaused ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
-                    {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
-                  </button>
+                  <PlayerButton
+                    isPlaying={isPlaying}
+                    isPaused={isPaused}
+                    isCurrent={true}
+                    onClick={handlePlayPause}
+                  />
                   <button className="minecraft-button p-2" onClick={onNext} aria-label="Suivant">
                     <SkipForward size={20} />
                   </button>
@@ -430,5 +433,43 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
     </Droppable>
   );
 };
+
+// Nouveau composant pour le bouton Play/Pause global et card
+export interface PlayerButtonProps {
+  isPlaying: boolean;
+  isPaused: boolean;
+  isCurrent: boolean;
+  isLoading?: boolean;
+  onClick: () => void;
+}
+
+export const PlayerButton: React.FC<PlayerButtonProps> = ({
+  isPlaying,
+  isPaused,
+  isCurrent,
+  isLoading = false,
+  onClick,
+}) => (
+  <button
+    onClick={onClick}
+    disabled={isLoading}
+    className={`minecraft-button p-2 flex items-center justify-center transition-colors
+      ${isCurrent && isPlaying && !isPaused ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground'}
+      ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+    `}
+    aria-label={isCurrent && isPlaying && !isPaused ? 'Pause' : 'Play'}
+    style={{ color: 'inherit' }}
+  >
+    {isLoading ? (
+      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+    ) : (
+      isCurrent && isPlaying && !isPaused ? (
+        <Pause className="w-4 h-4 animate-pulse-green" fill="currentColor" stroke="currentColor" />
+      ) : (
+        <Play className="w-4 h-4" fill="none" stroke="currentColor" />
+      )
+    )}
+  </button>
+);
 
 export default UnifiedAudioPlayer;

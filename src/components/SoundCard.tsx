@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Play, Download } from 'lucide-react';
+import { Play, Download, Pause } from 'lucide-react';
+import { PlayerButton } from './GlobalAudioPlayer';
 
 interface SoundCardProps {
   soundId: string;
@@ -11,6 +12,7 @@ interface SoundCardProps {
   onPlay: (soundPath: string, soundId: string) => void;
   onToggleFavorite: (soundId: string) => void;
   disableAnimation?: boolean;
+  isPaused?: boolean; // Ajouté pour synchroniser l'état pause
 }
 
 const SoundCard: React.FC<SoundCardProps> = ({
@@ -23,6 +25,7 @@ const SoundCard: React.FC<SoundCardProps> = ({
   onPlay,
   onToggleFavorite,
   disableAnimation,
+  isPaused = false, // Ajouté
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,15 @@ const SoundCard: React.FC<SoundCardProps> = ({
       console.error('Play error:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Ajoute une fonction pour gérer pause depuis la card
+  const handlePause = () => {
+    // On ne peut pauser que si le son est en cours de lecture
+    if (isPlaying && onPlay) {
+      // On simule un toggle pause/play via onPlay
+      onPlay(soundPath, soundId);
     }
   };
 
@@ -87,26 +99,13 @@ const SoundCard: React.FC<SoundCardProps> = ({
       <div className="flex items-center justify-between mt-auto pt-2">
         <div className="flex items-center gap-2">
           {/* Play button */}
-          <button
-            onClick={handlePlay}
-            disabled={isLoading}
-            className={`minecraft-button p-2 flex items-center justify-center transition-colors
-              ${isPlaying ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground'}
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-            aria-label={isPlaying ? 'Currently playing' : 'Play sound'}
-            style={{ color: 'inherit' }}
-          >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Play 
-                className={`w-4 h-4 ${isPlaying ? 'animate-pulse-green' : ''}`} 
-                fill={isPlaying ? 'currentColor' : 'none'}
-                stroke="currentColor"
-              />
-            )}
-          </button>
+          <PlayerButton
+            isPlaying={isPlaying}
+            isPaused={!!isPaused}
+            isCurrent={isPlaying}
+            isLoading={isLoading}
+            onClick={isPlaying ? (isPaused ? handlePlay : handlePause) : handlePlay}
+          />
 
           {/* Download button */}
           <button
