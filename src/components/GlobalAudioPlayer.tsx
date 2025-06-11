@@ -305,6 +305,9 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
               <button className={`minecraft-button p-2${isPlaying && !isPaused ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
                 {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
               </button>
+              <button className="minecraft-button p-2" onClick={onNext} aria-label="Suivant">
+                <SkipForward size={20} />
+              </button>
               <button className={`minecraft-button p-2${!isPlaying && !isPaused && current ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleStop} aria-label="Stop">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
               </button>
@@ -316,9 +319,6 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                   <Heart size={20} fill={favorites.has(current?.id) ? 'currentColor' : 'none'} />
                 </button>
               )}
-              <button className="minecraft-button p-2" onClick={onNext} aria-label="Suivant">
-                <SkipForward size={20} />
-              </button>
             </div>
             {/* Custom progress bar juste en dessous des boutons */}
             {hasQueue && (
