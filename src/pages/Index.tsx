@@ -6,6 +6,8 @@ import UnifiedAudioPlayer from '../components/GlobalAudioPlayer';
 import ThemeSwitch from '../components/ThemeSwitch';
 import { FavoritesManager } from '../utils/favoritesManager';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import VirtualizedSoundGrid from '../components/VirtualizedSoundGrid';
+import { FixedSizeGrid as Grid } from 'react-window';
 
 
 interface Sound {
@@ -349,16 +351,13 @@ const Index: React.FC = () => {
           </button>
           <Droppable droppableId="sound-list">
             {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                role="tabpanel"
-                id={`panel-${activeCategory}`}
-                aria-labelledby={`tab-${activeCategory}`}
-              >
-                {orderedSounds.length > 0 ? (
-                  orderedSounds.map((sound, idx) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                <VirtualizedSoundGrid
+                  sounds={orderedSounds}
+                  columnCount={5}
+                  rowHeight={180}
+                  columnWidth={240}
+                  renderSound={(sound, idx) => (
                     <Draggable key={sound.id} draggableId={sound.id} index={idx}>
                       {(provided, snapshot) => (
                         <div
@@ -368,7 +367,7 @@ const Index: React.FC = () => {
                           style={{
                             ...provided.draggableProps.style,
                             opacity: snapshot.isDragging ? 0.7 : 1,
-                            zIndex: snapshot.isDragging ? 10000 : 'auto', // Passe la card au-dessus du player
+                            zIndex: snapshot.isDragging ? 10000 : 'auto',
                             position: snapshot.isDragging ? 'fixed' : 'static',
                             pointerEvents: snapshot.isDragging ? 'none' : 'auto',
                           }}
@@ -390,8 +389,9 @@ const Index: React.FC = () => {
                         </div>
                       )}
                     </Draggable>
-                  ))
-                ) : (
+                  )}
+                />
+                {orderedSounds.length === 0 && (
                   <div className="col-span-full text-center py-6 text-muted-foreground">
                     No sounds found in this category.
                   </div>
