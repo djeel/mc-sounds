@@ -229,6 +229,27 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
             position: 'fixed',
           }}
         >
+          {/* Handle de resize haut gauche */}
+          {!isMinimized && (
+            <div
+              onMouseDown={onResizeMouseDown}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: 12,
+                height: 12,
+                cursor: 'nwse-resize',
+                zIndex: 10002,
+                background: 'linear-gradient(135deg, #22c55e 60%, transparent 60%)',
+                borderTopLeftRadius: 6,
+                opacity: 0.7,
+                transition: 'opacity 0.2s',
+              }}
+              title="Redimensionner le player"
+              tabIndex={-1}
+            />
+          )}
           {/* Highlight carré pointillé lors du drag-over, overlay absolu dans le lecteur uniquement */}
           {(snapshot.isDraggingOver || isDragging) && (
             <div
@@ -279,6 +300,28 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
             </button>
           </div>
           {/* Mode minimal : juste la barre de titre */}
+          {/* L'audio player doit rester monté même en mode minimisé */}
+          <AudioPlayer
+            ref={audioPlayerRef}
+            src={current?.path}
+            autoPlay={isPlaying && !isPaused}
+            showSkipControls={false}
+            showJumpControls={false}
+            showDownloadProgress={false}
+            showFilledProgress={false}
+            customAdditionalControls={[]}
+            customVolumeControls={[]}
+            loop={isLooping}
+            style={{ display: 'none' }}
+            onClickPrevious={undefined}
+            onClickNext={undefined}
+            onPlay={undefined}
+            onPause={undefined}
+            onEnded={onNext}
+            onSeeked={handleTimeUpdate}
+            onListen={handleTimeUpdate}
+            onLoadedMetaData={handleTimeUpdate}
+          />
           {isMinimized ? null : (
             <div className="flex flex-col flex-1 gap-2 p-4 h-full min-h-0" style={{height: `calc(100% - 32px)`}}>
               {/* Queue display - plus besoin de Droppable ici */}
@@ -388,45 +431,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                   </div>
                 )}
               </div>
-              <AudioPlayer
-                ref={audioPlayerRef}
-                src={current?.path}
-                autoPlay={isPlaying && !isPaused}
-                showSkipControls={false}
-                showJumpControls={false}
-                showDownloadProgress={false}
-                showFilledProgress={false}
-                customAdditionalControls={[]}
-                customVolumeControls={[]}
-                loop={isLooping}
-                style={{ display: 'none' }}
-                onClickPrevious={undefined}
-                onClickNext={undefined}
-                onPlay={undefined}
-                onPause={undefined}
-                onEnded={onNext}
-                onSeeked={handleTimeUpdate}
-                onListen={handleTimeUpdate}
-                onLoadedMetaData={handleTimeUpdate}
-              />
             </div>
-          )}
-          {/* Coin de resize custom haut gauche uniquement */}
-          {!isMinimized && (
-            <div
-              onMouseDown={onResizeMouseDown}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: 18,
-                height: 18,
-                cursor: 'nwse-resize',
-                zIndex: 10,
-                background: 'transparent',
-                userSelect: 'none',
-              }}
-            />
           )}
         </div>
       )}
@@ -434,42 +439,37 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   );
 };
 
-// Nouveau composant pour le bouton Play/Pause global et card
-export interface PlayerButtonProps {
+export const PlayerButton: React.FC<{
   isPlaying: boolean;
   isPaused: boolean;
   isCurrent: boolean;
-  isLoading?: boolean;
   onClick: () => void;
-}
+}> = ({ isPlaying, isPaused, isCurrent, onClick }) => {
+  const [localPlaying, setLocalPlaying] = useState(isPlaying);
+  const [localPaused, setLocalPaused] = useState(isPaused);
 
-export const PlayerButton: React.FC<PlayerButtonProps> = ({
-  isPlaying,
-  isPaused,
-  isCurrent,
-  isLoading = false,
-  onClick,
-}) => (
-  <button
-    onClick={onClick}
-    disabled={isLoading}
-    className={`minecraft-button p-2 flex items-center justify-center transition-colors
-      ${isCurrent && isPlaying && !isPaused ? 'bg-primary-green-500 text-white border-primary-green-600' : 'bg-card text-foreground border-foreground'}
-      ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-    `}
-    aria-label={isCurrent && isPlaying && !isPaused ? 'Pause' : 'Play'}
-    style={{ color: 'inherit' }}
-  >
-    {isLoading ? (
-      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-    ) : (
-      isCurrent && isPlaying && !isPaused ? (
-        <Pause className="w-4 h-4 animate-pulse-green" fill="currentColor" stroke="currentColor" />
+  React.useEffect(() => {
+    setLocalPlaying(isPlaying);
+    setLocalPaused(isPaused);
+  }, [isPlaying, isPaused]);
+
+  return (
+    <button
+      className={`minecraft-button p-2 ${localPlaying ? 'active bg-primary-green-500 text-white border-primary-green-600' : ''}`}
+      onClick={() => {
+        onClick();
+        setLocalPlaying(p => !p);
+        setLocalPaused(false);
+      }}
+      aria-label={localPlaying ? 'Pause' : 'Play'}
+    >
+      {localPlaying ? (
+        <Pause size={20} />
       ) : (
-        <Play className="w-4 h-4" fill="none" stroke="currentColor" />
-      )
-    )}
-  </button>
-);
+        <Play size={20} />
+      )}
+    </button>
+  );
+};
 
 export default UnifiedAudioPlayer;
