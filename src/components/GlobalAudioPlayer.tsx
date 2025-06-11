@@ -189,6 +189,21 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
     return `${m}:${s}`;
   };
 
+  // Timer pour une mise à jour fluide de la barre de progression
+  React.useEffect(() => {
+    let interval: number | undefined;
+    if (isPlaying && !isPaused && audioPlayerRef.current && audioPlayerRef.current.audio.current) {
+      interval = window.setInterval(() => {
+        const audio = audioPlayerRef.current.audio.current;
+        setProgress(audio.currentTime);
+        setDuration(audio.duration);
+      }, 50); // 20 FPS
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, isPaused, current]);
+
   return (
     <div
       ref={playerRef}
@@ -266,7 +281,12 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                   onClick={() => onSelectIndex && idx !== currentIndex && onSelectIndex(idx)}
                   style={{ cursor: idx !== currentIndex ? 'pointer' : 'default', minHeight: 32 }}
                 >
-                  <span className="truncate flex-1">{item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}</span>
+                  <span className="truncate flex-1">
+                    {item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}
+                    <span className="text-xs text-muted-foreground ml-2" style={{fontWeight: 'normal'}}>
+                      {item.path}
+                    </span>
+                  </span>
                   <span className="text-xs text-muted-foreground ml-2" style={{minWidth: 44, textAlign: 'right'}}>
                     {trackDurations[item.id] !== undefined ? formatTime(trackDurations[item.id]) : '--:--'}
                   </span>
@@ -312,8 +332,36 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                   style={{
                     background: `linear-gradient(to right, #22c55e ${(progress/(duration||1))*100}%, #e5e7eb ${(progress/(duration||1))*100}%)`,
                     accentColor: '#22c55e',
+                    // Masque le thumb natif
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
                   }}
                 />
+                <style>{`
+                  input[type=range].w-full::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 0;
+                    height: 0;
+                    background: transparent;
+                    box-shadow: none;
+                    border: none;
+                  }
+                  input[type=range].w-full::-moz-range-thumb {
+                    width: 0;
+                    height: 0;
+                    background: transparent;
+                    box-shadow: none;
+                    border: none;
+                  }
+                  input[type=range].w-full::-ms-thumb {
+                    width: 0;
+                    height: 0;
+                    background: transparent;
+                    box-shadow: none;
+                    border: none;
+                  }
+                `}</style>
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{formatTime(progress)}</span>
                   <span>{formatTime(duration)}</span>
