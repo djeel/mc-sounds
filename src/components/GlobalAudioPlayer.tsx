@@ -394,6 +394,23 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
           />
         </div>
       )}
+      {/* Coin de resize custom haut gauche uniquement */}
+      {!isMinimized && (
+        <div
+          onMouseDown={onResizeMouseDown}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: 18,
+            height: 18,
+            cursor: 'nwse-resize',
+            zIndex: 10,
+            background: 'transparent',
+            userSelect: 'none',
+          }}
+        />
+      )}
     </div>
   );
 };
