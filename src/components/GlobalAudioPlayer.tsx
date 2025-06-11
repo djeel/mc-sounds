@@ -106,6 +106,34 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // Pour stocker les durées des tracks
+  const [trackDurations, setTrackDurations] = useState<{ [id: string]: number }>({});
+
+  // Pré-charger la durée de chaque track de la queue (si possible)
+  React.useEffect(() => {
+    const loadDurations = async () => {
+      const newDurations: { [id: string]: number } = { ...trackDurations };
+      const promises = queue.map(item => {
+        if (newDurations[item.id] !== undefined) return null;
+        return new Promise<void>(resolve => {
+          const audio = new window.Audio(item.path);
+          audio.addEventListener('loadedmetadata', () => {
+            newDurations[item.id] = audio.duration;
+            resolve();
+          });
+          audio.addEventListener('error', () => {
+            newDurations[item.id] = NaN;
+            resolve();
+          });
+        });
+      });
+      await Promise.all(promises.filter(Boolean));
+      setTrackDurations(newDurations);
+    };
+    if (queue.length > 0) loadDurations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue]);
+
   // Update progress bar
   const handleTimeUpdate = (e: any) => {
     const audio = e.target;
@@ -129,14 +157,6 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
     return `${m}:${s}`;
   };
 
-  // Nouvelle fonction pour clear la queue et stopper la musique
-  const handleStopAndClear = () => {
-    onStop();
-    if (onSelectIndex) onSelectIndex(0);
-    // Si la queue est contrôlée par le parent, il doit la vider
-    // Sinon, on peut ajouter une prop onClearQueue à appeler ici
-  };
-
   return (
     <div
       ref={playerRef}
@@ -157,6 +177,8 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
         bottom: 16,
         left: undefined,
         top: undefined,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {/* Coin de resize custom haut gauche uniquement */}
@@ -194,60 +216,43 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
       </div>
       {/* Mode minimal : juste la barre de titre */}
       {isMinimized ? null : (
-        <div className="flex flex-col gap-2 p-4 h-full relative" style={{height: `calc(100% - 32px)`}}>
+        <div className="flex flex-col flex-1 gap-2 p-4 h-full min-h-0" style={{height: `calc(100% - 32px)`}}>
           {/* Queue display - only show if there's a queue */}
           {hasQueue && (
-            <div className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 overflow-y-auto" style={{maxHeight: `${Math.min(queue.length, 5) * 38}px`, minHeight: 38, transition: 'max-height 0.2s'}}>
+            <div
+              className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 overflow-y-auto"
+              style={{
+                maxHeight: queue.length > 5 ? 5 * 36 : undefined, // 36px par item environ
+                minHeight: 0,
+                marginBottom: 8,
+              }}
+            >
               {queue.map((item, idx) => (
                 <div
                   key={item.id}
                   className={`flex items-center gap-2 px-2 py-1 rounded transition-colors ${idx === currentIndex ? 'bg-primary/20 font-bold' : 'cursor-pointer hover:bg-primary/10'}`}
                   onClick={() => onSelectIndex && idx !== currentIndex && onSelectIndex(idx)}
-                  style={{ cursor: idx !== currentIndex ? 'pointer' : 'default' }}
+                  style={{ cursor: idx !== currentIndex ? 'pointer' : 'default', minHeight: 32 }}
                 >
                   <span className="truncate flex-1">{item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}</span>
-                  {/* Favori inline */}
-                  {onToggleFavorite && (
-                    <button className={`minecraft-button p-1 ${favorites.has(item.id) ? 'text-red-500' : ''}`} onClick={e => {e.stopPropagation(); onToggleFavorite(item.id);}} aria-label="Favori">
-                      <Heart size={16} fill={favorites.has(item.id) ? 'currentColor' : 'none'} />
-                    </button>
-                  )}
-                  {/* Durée si c'est la track courante */}
-                  {idx === currentIndex && (
-                    <span className="text-xs text-muted-foreground ml-2">{formatTime(duration)}</span>
-                  )}
+                  <span className="text-xs text-muted-foreground ml-2" style={{minWidth: 44, textAlign: 'right'}}>
+                    {trackDurations[item.id] !== undefined ? formatTime(trackDurations[item.id]) : '--:--'}
+                  </span>
                 </div>
               ))}
             </div>
           )}
-          {/* Zone pour coller la barre de progression et les boutons en bas */}
-          <div className="flex flex-col gap-1 w-full mt-auto" style={{position: 'absolute', left: 0, right: 0, bottom: 16, padding: '0 1rem'}}>
-            {/* Custom progress bar */}
-            <input
-              type="range"
-              min={0}
-              max={duration || 1}
-              value={progress}
-              onChange={handleSeek}
-              className="w-full h-2 rounded-lg appearance-none bg-gray-200 focus:outline-none"
-              style={{
-                background: `linear-gradient(to right, #22c55e ${(progress/(duration||1))*100}%, #e5e7eb ${(progress/(duration||1))*100}%)`,
-                accentColor: '#22c55e',
-              }}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>{formatTime(progress)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
+          {/* Zone des boutons + barre de progression toujours en bas */}
+          <div className="flex flex-col mt-auto w-full" style={{position: 'relative'}}>
             {/* Custom controls alignés en bas */}
-            <div className="flex items-center justify-center gap-3 w-full">
+            <div className="flex items-center justify-center gap-3 w-full" style={{}}>
               <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
                 <SkipBack size={20} />
               </button>
               <button className="minecraft-button p-2" onClick={onPlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
                 {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
               </button>
-              <button className="minecraft-button p-2" onClick={handleStopAndClear} aria-label="Stop">
+              <button className="minecraft-button p-2" onClick={onStop} aria-label="Stop">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
               </button>
               <button className={`minecraft-button p-2 ${isLooping ? 'bg-green-600 text-white' : ''}`} onClick={onToggleLoop} aria-label="Loop">
@@ -262,7 +267,50 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                 <SkipForward size={20} />
               </button>
             </div>
+            {/* Custom progress bar juste en dessous des boutons */}
+            {hasQueue && (
+              <div className="w-full flex flex-col gap-1" style={{marginTop: 8}}>
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 1}
+                  value={progress}
+                  onChange={handleSeek}
+                  className="w-full h-2 rounded-lg appearance-none bg-gray-200 focus:outline-none"
+                  style={{
+                    background: `linear-gradient(to right, #22c55e ${(progress/(duration||1))*100}%, #e5e7eb ${(progress/(duration||1))*100}%)`,
+                    accentColor: '#22c55e',
+                  }}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{formatTime(progress)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+            )}
           </div>
+          {/* Nouveau lecteur audio intégré (caché) */}
+          <AudioPlayer
+            ref={audioPlayerRef}
+            src={current?.path}
+            autoPlay={isPlaying && !isPaused}
+            showSkipControls={false}
+            showJumpControls={false}
+            showDownloadProgress={false}
+            showFilledProgress={false}
+            customAdditionalControls={[]}
+            customVolumeControls={[]}
+            loop={isLooping}
+            style={{ display: 'none' }} // Hide native controls
+            onClickPrevious={undefined}
+            onClickNext={undefined}
+            onPlay={undefined}
+            onPause={undefined}
+            onEnded={onNext}
+            onSeeked={handleTimeUpdate}
+            onListen={handleTimeUpdate}
+            onLoadedMetaData={handleTimeUpdate}
+          />
         </div>
       )}
     </div>
