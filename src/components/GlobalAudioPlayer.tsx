@@ -102,6 +102,41 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
     };
   }, [dragging, dragStart]);
 
+  // Custom progress bar state
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  // Update progress bar
+  const handleTimeUpdate = (e: any) => {
+    const audio = e.target;
+    setProgress(audio.currentTime);
+    setDuration(audio.duration);
+  };
+
+  // Seek handler
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
+      audioPlayerRef.current.audio.current.currentTime = Number(e.target.value);
+      setProgress(Number(e.target.value));
+    }
+  };
+
+  // Format time helper
+  const formatTime = (sec: number) => {
+    if (!isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  // Nouvelle fonction pour clear la queue et stopper la musique
+  const handleStopAndClear = () => {
+    onStop();
+    if (onSelectIndex) onSelectIndex(0);
+    // Si la queue est contrôlée par le parent, il doit la vider
+    // Sinon, on peut ajouter une prop onClearQueue à appeler ici
+  };
+
   return (
     <div
       ref={playerRef}
@@ -159,10 +194,10 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
       </div>
       {/* Mode minimal : juste la barre de titre */}
       {isMinimized ? null : (
-        <div className="flex flex-col gap-2 p-4 h-full" style={{height: `calc(100% - 32px)`}}>
+        <div className="flex flex-col gap-2 p-4 h-full relative" style={{height: `calc(100% - 32px)`}}>
           {/* Queue display - only show if there's a queue */}
           {hasQueue && (
-            <div className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 max-h-32 overflow-y-auto">
+            <div className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 overflow-y-auto" style={{maxHeight: `${Math.min(queue.length, 5) * 38}px`, minHeight: 38, transition: 'max-height 0.2s'}}>
               {queue.map((item, idx) => (
                 <div
                   key={item.id}
@@ -171,28 +206,63 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                   style={{ cursor: idx !== currentIndex ? 'pointer' : 'default' }}
                 >
                   <span className="truncate flex-1">{item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}</span>
+                  {/* Favori inline */}
+                  {onToggleFavorite && (
+                    <button className={`minecraft-button p-1 ${favorites.has(item.id) ? 'text-red-500' : ''}`} onClick={e => {e.stopPropagation(); onToggleFavorite(item.id);}} aria-label="Favori">
+                      <Heart size={16} fill={favorites.has(item.id) ? 'currentColor' : 'none'} />
+                    </button>
+                  )}
+                  {/* Durée si c'est la track courante */}
+                  {idx === currentIndex && (
+                    <span className="text-xs text-muted-foreground ml-2">{formatTime(duration)}</span>
+                  )}
                 </div>
               ))}
             </div>
           )}
-          {/* Nouveau lecteur audio intégré */}
-          <AudioPlayer
-            ref={audioPlayerRef}
-            src={current?.path}
-            autoPlay={isPlaying && !isPaused}
-            showSkipControls
-            showJumpControls={false}
-            onClickPrevious={onPrev}
-            onClickNext={onNext}
-            onPlay={undefined}
-            onPause={undefined}
-            onEnded={onNext}
-            customAdditionalControls={[]}
-            customVolumeControls={[]}
-            loop={isLooping}
-            style={{ borderRadius: 8, marginTop: 8, background: 'var(--card)' }}
-          />
-          {/* Boutons favoris, loop, stop, etc. peuvent rester sous le player si besoin */}
+          {/* Zone pour coller la barre de progression et les boutons en bas */}
+          <div className="flex flex-col gap-1 w-full mt-auto" style={{position: 'absolute', left: 0, right: 0, bottom: 16, padding: '0 1rem'}}>
+            {/* Custom progress bar */}
+            <input
+              type="range"
+              min={0}
+              max={duration || 1}
+              value={progress}
+              onChange={handleSeek}
+              className="w-full h-2 rounded-lg appearance-none bg-gray-200 focus:outline-none"
+              style={{
+                background: `linear-gradient(to right, #22c55e ${(progress/(duration||1))*100}%, #e5e7eb ${(progress/(duration||1))*100}%)`,
+                accentColor: '#22c55e',
+              }}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>{formatTime(progress)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+            {/* Custom controls alignés en bas */}
+            <div className="flex items-center justify-center gap-3 w-full">
+              <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
+                <SkipBack size={20} />
+              </button>
+              <button className="minecraft-button p-2" onClick={onPlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
+                {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
+              </button>
+              <button className="minecraft-button p-2" onClick={handleStopAndClear} aria-label="Stop">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
+              </button>
+              <button className={`minecraft-button p-2 ${isLooping ? 'bg-green-600 text-white' : ''}`} onClick={onToggleLoop} aria-label="Loop">
+                <Repeat size={20} />
+              </button>
+              {onToggleFavorite && (
+                <button className={`minecraft-button p-2 ${favorites.has(current?.id) ? 'text-red-500' : ''}`} onClick={() => current && onToggleFavorite(current.id)} aria-label="Favori">
+                  <Heart size={20} fill={favorites.has(current?.id) ? 'currentColor' : 'none'} />
+                </button>
+              )}
+              <button className="minecraft-button p-2" onClick={onNext} aria-label="Suivant">
+                <SkipForward size={20} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
