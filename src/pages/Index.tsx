@@ -345,7 +345,7 @@ const Index: React.FC = () => {
             onClick={handlePlayAll}
             disabled={orderedSounds.length === 0}
           >
-            ▶️ Play all in this order
+              ▶ Play all in this order 
           </button>
           <Droppable droppableId="sound-list">
             {(provided) => (
