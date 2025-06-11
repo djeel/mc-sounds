@@ -208,69 +208,84 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   }, [isPlaying, isPaused, current]);
 
   return (
-    <div
-      ref={playerRef}
-      className="fixed z-[9999] bottom-4 right-4 animate-fade-in bg-card border border-border shadow-lg"
-      style={{
-        width: size.width,
-        height: isMinimized ? 32 : size.height, // 32px = hauteur du header seulement si minimisé
-        minWidth: 260,
-        minHeight: 32, // 32px = header
-        maxWidth: '100vw',
-        maxHeight: '90vh',
-        borderRadius: 8,
-        overflow: 'hidden',
-        resize: 'none',
-        position: 'fixed',
-      }}
-    >
-      {/* Barre de titre avec bouton réduire/agrandir aligné à droite */}
-      <div className="flex items-center justify-between px-0 py-0 bg-card border-b border-border select-none overflow-hidden" style={{height: 32}}>
-        <span className="text-xs text-foreground truncate flex-1 pl-3">
-          {current ? current.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : 'No sound playing'}
-        </span>
-        <button
-          className="minecraft-button p-0 rounded-none bg-card"
-          aria-label={isMinimized ? 'Agrandir le player' : 'Réduire le player'}
-          onClick={() => setIsMinimized(m => !m)}
-          tabIndex={0}
+    <Droppable droppableId="player-queue">
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+          className="fixed z-[9999] bottom-4 right-4 animate-fade-in bg-card border border-border shadow-lg"
           style={{
-            boxShadow: 'none',
-            background: 'inherit',
-            border: 'none',
-            color: 'inherit',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: 32,
-            width: 32,
-            margin: 0,
+            width: size.width,
+            height: isMinimized ? 32 : size.height,
+            minWidth: 260,
+            minHeight: 32,
+            maxWidth: '100vw',
+            maxHeight: '90vh',
+            borderRadius: 8,
+            overflow: 'hidden',
+            resize: 'none',
+            position: 'fixed',
           }}
         >
-          {isMinimized ? (
-            // Chevron haut (agrandir)
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 12l4-4 4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          ) : (
-            // Chevron bas (minimiser)
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 8l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {/* Highlight carré pointillé lors du drag-over, overlay absolu dans le lecteur uniquement */}
+          {snapshot.isDraggingOver && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                border: '2px dashed #22c55e',
+                borderRadius: 8,
+                pointerEvents: 'none',
+                zIndex: 10001,
+                background: 'rgba(34,197,94,0.08)'
+              }}
+            />
           )}
-        </button>
-      </div>
-      {/* Mode minimal : juste la barre de titre */}
-      {isMinimized ? null : (
-        <div className="flex flex-col flex-1 gap-2 p-4 h-full min-h-0" style={{height: `calc(100% - 32px)`}}>
-          {/* Queue display - droppable pour drag & drop */}
-          <Droppable droppableId="player-queue" direction="vertical">
-            {(provided, snapshot) => (
+          {/* Barre de titre avec bouton réduire/agrandir aligné à droite */}
+          <div className="flex items-center justify-between px-0 py-0 bg-card border-b border-border select-none overflow-hidden" style={{height: 32}}>
+            <span className="text-xs text-foreground truncate flex-1 pl-3">
+              {current ? current.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : 'No sound playing'}
+            </span>
+            <button
+              className="minecraft-button p-0 rounded-none bg-card"
+              aria-label={isMinimized ? 'Agrandir le player' : 'Réduire le player'}
+              onClick={() => setIsMinimized(m => !m)}
+              tabIndex={0}
+              style={{
+                boxShadow: 'none',
+                background: 'inherit',
+                border: 'none',
+                color: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: 32,
+                width: 32,
+                margin: 0,
+              }}
+            >
+              {isMinimized ? (
+                // Chevron haut (agrandir)
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 12l4-4 4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ) : (
+                // Chevron bas (minimiser)
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M6 8l4 4 4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              )}
+            </button>
+          </div>
+          {/* Mode minimal : juste la barre de titre */}
+          {isMinimized ? null : (
+            <div className="flex flex-col flex-1 gap-2 p-4 h-full min-h-0" style={{height: `calc(100% - 32px)`}}>
+              {/* Queue display - plus besoin de Droppable ici */}
               <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
                 className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 overflow-y-auto"
                 style={{
                   maxHeight: queue.length > 5 ? 5 * 36 : undefined,
                   minHeight: 0,
                   marginBottom: 8,
-                  background: snapshot.isDraggingOver ? '#e5ffe5' : undefined,
                 }}
               >
                 {queue.map((item, idx) => (
@@ -293,125 +308,124 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
                 ))}
                 {provided.placeholder}
               </div>
-            )}
-          </Droppable>
-          {/* Zone des boutons + barre de progression toujours en bas */}
-          <div className="flex flex-col mt-auto w-full" style={{position: 'relative'}}>
-            {/* Custom controls alignés en bas */}
-            <div className="flex items-center justify-start gap-3 w-full" style={{}}>
-              <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
-                <SkipBack size={20} />
-              </button>
-              <button className={`minecraft-button p-2${isPlaying && !isPaused ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
-                {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
-              </button>
-              <button className="minecraft-button p-2" onClick={onNext} aria-label="Suivant">
-                <SkipForward size={20} />
-              </button>
-              <button className={`minecraft-button p-2${!isPlaying && !isPaused && current ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleStop} aria-label="Stop">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
-              </button>
-              <button className={`minecraft-button p-2 ${isLooping ? 'active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleToggleLoop} aria-label="Loop">
-                <Repeat size={20} />
-              </button>
-              {onToggleFavorite && (
-                <button className={`minecraft-button p-2${favorites.has(current?.id) ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={() => current && onToggleFavorite(current.id)} aria-label="Favori">
-                  <Heart size={20} fill={favorites.has(current?.id) ? 'currentColor' : 'none'} />
-                </button>
-              )}
-            </div>
-            {/* Custom progress bar juste en dessous des boutons */}
-            {hasQueue && (
-              <div className="w-full flex flex-col gap-1" style={{marginTop: 8}}>
-                <input
-                  type="range"
-                  min={0}
-                  max={duration || 1}
-                  value={progress}
-                  onChange={handleSeek}
-                  className="w-full h-2 rounded-lg appearance-none bg-gray-200 focus:outline-none"
-                  style={{
-                    background: `linear-gradient(to right, #22c55e ${(progress/(duration||1))*100}%, #e5e7eb ${(progress/(duration||1))*100}%)`,
-                    accentColor: '#22c55e',
-                    // Masque le thumb natif
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                  }}
-                />
-                <style>{`
-                  input[type=range].w-full::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 0;
-                    height: 0;
-                    background: transparent;
-                    box-shadow: none;
-                    border: none;
-                  }
-                  input[type=range].w-full::-moz-range-thumb {
-                    width: 0;
-                    height: 0;
-                    background: transparent;
-                    box-shadow: none;
-                    border: none;
-                  }
-                  input[type=range].w-full::-ms-thumb {
-                    width: 0;
-                    height: 0;
-                    background: transparent;
-                    box-shadow: none;
-                    border: none;
-                  }
-                `}</style>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatTime(progress)}</span>
-                  <span>{formatTime(duration)}</span>
+              {/* Zone des boutons + barre de progression toujours en bas */}
+              <div className="flex flex-col mt-auto w-full" style={{position: 'relative'}}>
+                {/* Custom controls alignés en bas */}
+                <div className="flex items-center justify-start gap-3 w-full" style={{}}>
+                  <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
+                    <SkipBack size={20} />
+                  </button>
+                  <button className={`minecraft-button p-2${isPlaying && !isPaused ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
+                    {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
+                  </button>
+                  <button className="minecraft-button p-2" onClick={onNext} aria-label="Suivant">
+                    <SkipForward size={20} />
+                  </button>
+                  <button className={`minecraft-button p-2${!isPlaying && !isPaused && current ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleStop} aria-label="Stop">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
+                  </button>
+                  <button className={`minecraft-button p-2 ${isLooping ? 'active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={handleToggleLoop} aria-label="Loop">
+                    <Repeat size={20} />
+                  </button>
+                  {onToggleFavorite && (
+                    <button className={`minecraft-button p-2${favorites.has(current?.id) ? ' active bg-primary-green-500 text-white border-primary-green-600' : ''}`} onClick={() => current && onToggleFavorite(current.id)} aria-label="Favori">
+                      <Heart size={20} fill={favorites.has(current?.id) ? 'currentColor' : 'none'} />
+                    </button>
+                  )}
                 </div>
+                {/* Custom progress bar juste en dessous des boutons */}
+                {hasQueue && (
+                  <div className="w-full flex flex-col gap-1" style={{marginTop: 8}}>
+                    <input
+                      type="range"
+                      min={0}
+                      max={duration || 1}
+                      value={progress}
+                      onChange={handleSeek}
+                      className="w-full h-2 rounded-lg appearance-none bg-gray-200 focus:outline-none"
+                      style={{
+                        background: `linear-gradient(to right, #22c55e ${(progress/(duration||1))*100}%, #e5e7eb ${(progress/(duration||1))*100}%)`,
+                        accentColor: '#22c55e',
+                        // Masque le thumb natif
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                      }}
+                    />
+                    <style>{`
+                      input[type=range].w-full::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 0;
+                        height: 0;
+                        background: transparent;
+                        box-shadow: none;
+                        border: none;
+                      }
+                      input[type=range].w-full::-moz-range-thumb {
+                        width: 0;
+                        height: 0;
+                        background: transparent;
+                        box-shadow: none;
+                        border: none;
+                      }
+                      input[type=range].w-full::-ms-thumb {
+                        width: 0;
+                        height: 0;
+                        background: transparent;
+                        box-shadow: none;
+                        border: none;
+                      }
+                    `}</style>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{formatTime(progress)}</span>
+                      <span>{formatTime(duration)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {/* Nouveau lecteur audio intégré (caché) */}
-          <AudioPlayer
-            ref={audioPlayerRef}
-            src={current?.path}
-            autoPlay={isPlaying && !isPaused}
-            showSkipControls={false}
-            showJumpControls={false}
-            showDownloadProgress={false}
-            showFilledProgress={false}
-            customAdditionalControls={[]}
-            customVolumeControls={[]}
-            loop={isLooping}
-            style={{ display: 'none' }} // Hide native controls
-            onClickPrevious={undefined}
-            onClickNext={undefined}
-            onPlay={undefined}
-            onPause={undefined}
-            onEnded={onNext}
-            onSeeked={handleTimeUpdate}
-            onListen={handleTimeUpdate}
-            onLoadedMetaData={handleTimeUpdate}
-          />
+              <AudioPlayer
+                ref={audioPlayerRef}
+                src={current?.path}
+                autoPlay={isPlaying && !isPaused}
+                showSkipControls={false}
+                showJumpControls={false}
+                showDownloadProgress={false}
+                showFilledProgress={false}
+                customAdditionalControls={[]}
+                customVolumeControls={[]}
+                loop={isLooping}
+                style={{ display: 'none' }}
+                onClickPrevious={undefined}
+                onClickNext={undefined}
+                onPlay={undefined}
+                onPause={undefined}
+                onEnded={onNext}
+                onSeeked={handleTimeUpdate}
+                onListen={handleTimeUpdate}
+                onLoadedMetaData={handleTimeUpdate}
+              />
+            </div>
+          )}
+          {/* Coin de resize custom haut gauche uniquement */}
+          {!isMinimized && (
+            <div
+              onMouseDown={onResizeMouseDown}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: 18,
+                height: 18,
+                cursor: 'nwse-resize',
+                zIndex: 10,
+                background: 'transparent',
+                userSelect: 'none',
+              }}
+            />
+          )}
         </div>
       )}
-      {/* Coin de resize custom haut gauche uniquement */}
-      {!isMinimized && (
-        <div
-          onMouseDown={onResizeMouseDown}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: 18,
-            height: 18,
-            cursor: 'nwse-resize',
-            zIndex: 10,
-            background: 'transparent',
-            userSelect: 'none',
-          }}
-        />
-      )}
-    </div>
+    </Droppable>
   );
 };
 

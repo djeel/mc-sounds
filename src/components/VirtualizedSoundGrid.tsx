@@ -1,13 +1,17 @@
 import React from 'react';
 import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
-import { DragDropContext, Droppable, Draggable, DropResult, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
+import { Draggable } from '@hello-pangea/dnd';
+import SoundCard from './SoundCard';
 
 interface VirtualizedSoundGridProps {
   sounds: any[];
   columnCount: number;
   rowHeight: number;
   columnWidth: number;
-  renderDraggable: (sound: any, idx: number, cellStyle: React.CSSProperties, columnIndex: number) => React.ReactNode;
+  isPlaying: (soundId: string) => boolean;
+  isFavorite: (soundId: string) => boolean;
+  onPlay: (soundPath: string, soundId: string) => void;
+  onToggleFavorite: (soundId: string) => void;
 }
 
 const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
@@ -15,18 +19,40 @@ const VirtualizedSoundGrid: React.FC<VirtualizedSoundGridProps> = ({
   columnCount,
   rowHeight,
   columnWidth,
-  renderDraggable,
+  isPlaying,
+  isFavorite,
+  onPlay,
+  onToggleFavorite,
 }) => {
   const rowCount = Math.ceil(sounds.length / columnCount);
 
   const Cell = ({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
     const idx = rowIndex * columnCount + columnIndex;
     if (idx >= sounds.length) return null;
-    // On applique le style react-window sur le conteneur racine
+    const sound = sounds[idx];
     return (
-      <div style={{ ...style, boxSizing: 'border-box' }}>
-        {renderDraggable(sounds[idx], idx, { width: '100%', height: '100%' }, columnIndex)}
-      </div>
+      <Draggable draggableId={sound.id} index={idx} key={sound.id}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            style={{ ...style, boxSizing: 'border-box', padding: 6, ...provided.draggableProps.style }}
+            data-sound-id={sound.id}
+          >
+            <SoundCard
+              soundId={sound.id}
+              soundName={sound.name}
+              soundPath={sound.path}
+              category={sound.category}
+              isPlaying={isPlaying(sound.id)}
+              isFavorite={isFavorite(sound.id)}
+              onPlay={onPlay}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </div>
+        )}
+      </Draggable>
     );
   };
 

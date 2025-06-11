@@ -349,102 +349,102 @@ const Index: React.FC = () => {
           >
               ▶ Play all in this order 
           </button>
-          <Droppable droppableId="sound-list" renderClone={(provided, snapshot, rubric) => {
-            const sound = orderedSounds[rubric.source.index];
-            return (
-              <div
-                ref={provided.innerRef}
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                style={{
-                  ...provided.draggableProps.style,
-                  zIndex: 10000,
-                  pointerEvents: 'auto',
-                  height: 180,
-                  width: 240,
-                  boxSizing: 'border-box',
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex-1">
+              {/* Droppable minimal pour fournir le contexte DnD, sans réarrangement, AVEC renderClone */}
+              <Droppable
+                droppableId="sound-list"
+                isDropDisabled={true}
+                renderClone={(provided, snapshot, rubric) => {
+                  const sound = orderedSounds[rubric.source.index];
+                  // Style identique à la grille
+                  const columnCount = 5;
+                  const rowHeight = 180;
+                  const columnWidth = 240;
+                  const row = Math.floor(rubric.source.index / columnCount);
+                  const col = rubric.source.index % columnCount;
+                  const cellStyle: React.CSSProperties = {
+                    height: rowHeight,
+                    width: columnWidth,
+                    minHeight: rowHeight,
+                    minWidth: columnWidth,
+                    maxHeight: rowHeight,
+                    maxWidth: columnWidth,
+                    zIndex: 10000,
+                    pointerEvents: 'auto',
+                    boxSizing: 'border-box',
+                  };
+                  return (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      style={{ ...cellStyle, ...provided.draggableProps.style }}
+                      data-sound-id={sound.id}
+                    >
+                      <SoundCard
+                        soundId={sound.id}
+                        soundName={sound.name}
+                        soundPath={sound.path}
+                        category={sound.category}
+                        isPlaying={currentPlayingSound === sound.id}
+                        isFavorite={favorites.has(sound.id)}
+                        onPlay={(soundPath, soundId) => {
+                          const s = sounds.find(s => s.id === soundId);
+                          if (s) handlePlaySound(s);
+                        }}
+                        onToggleFavorite={() => handleToggleFavorite(sound.id)}
+                      />
+                    </div>
+                  );
                 }}
-                data-sound-id={sound.id}
               >
-                <SoundCard
-                  soundId={sound.id}
-                  soundName={sound.name}
-                  soundPath={sound.path}
-                  category={sound.category}
-                  isPlaying={currentPlayingSound === sound.id}
-                  isFavorite={favorites.has(sound.id)}
-                  onPlay={(soundPath, soundId) => {
-                    const s = sounds.find(s => s.id === soundId);
-                    if (s) handlePlaySound(s);
-                  }}
-                  onToggleFavorite={() => handleToggleFavorite(sound.id)}
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps}>
+                    <VirtualizedSoundGrid
+                      sounds={orderedSounds}
+                      columnCount={5}
+                      rowHeight={180}
+                      columnWidth={240}
+                      isPlaying={(id) => currentPlayingSound === id}
+                      isFavorite={(id) => favorites.has(id)}
+                      onPlay={(soundPath, soundId) => {
+                        const s = sounds.find(s => s.id === soundId);
+                        if (s) handlePlaySound(s);
+                      }}
+                      onToggleFavorite={handleToggleFavorite}
+                    />
+                    {orderedSounds.length === 0 && (
+                      <div className="col-span-full text-center py-6 text-muted-foreground">
+                        No sounds found in this category.
+                      </div>
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </div>
+            <div className="w-full lg:w-[400px]">
+              {/* On remet le Droppable ici si besoin d'un drop sur la colonne, mais SANS highlight ni style drag-over */}
+              <div className="sticky top-24 z-30" style={{ minHeight: 220 }}>
+                <UnifiedAudioPlayer
+                  queue={audioQueue}
+                  currentIndex={currentQueueIndex}
+                  isPlaying={isPlaying}
+                  isPaused={isPaused}
+                  isLooping={isLooping}
+                  onPlayPause={handlePlayPause}
+                  onPrev={handlePrev}
+                  onNext={handleNext}
+                  onStop={handleStop}
+                  onToggleLoop={handleToggleLoop}
+                  onToggleFavorite={handleToggleFavorite}
+                  favorites={favorites}
+                  onSelectIndex={setCurrentQueueIndex}
                 />
               </div>
-            );
-          }}>
-            {(provided, snapshot) => {
-              // On récupère l'index de l'item draggué si drag en cours
-              const draggingId = snapshot.draggingOverWith;
-              const draggingIdx = draggingId ? orderedSounds.findIndex(s => s.id === draggingId) : -1;
-              return (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  <VirtualizedSoundGrid
-                    sounds={orderedSounds}
-                    columnCount={5}
-                    rowHeight={180}
-                    columnWidth={240}
-                    renderDraggable={(sound, idx, cellStyle, columnIndex) => (
-                      // On ne rend pas le Draggable si c'est l'item draggué (il est rendu par renderClone)
-                      idx !== draggingIdx && (
-                        <Draggable key={sound.id} draggableId={sound.id} index={idx}>
-                          {(provided, snapshot) => {
-                            const mergedStyle: React.CSSProperties = {
-                              ...cellStyle,
-                              ...provided.draggableProps.style,
-                              zIndex: snapshot.isDragging ? 10000 : 'auto',
-                              pointerEvents: 'auto',
-                              height: cellStyle.height as string | number,
-                              width: cellStyle.width as string | number,
-                              boxSizing: 'border-box',
-                            };
-                            return (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                style={mergedStyle}
-                                data-sound-id={sound.id}
-                              >
-                                <SoundCard
-                                  soundId={sound.id}
-                                  soundName={sound.name}
-                                  soundPath={sound.path}
-                                  category={sound.category}
-                                  isPlaying={currentPlayingSound === sound.id}
-                                  isFavorite={favorites.has(sound.id)}
-                                  onPlay={(soundPath, soundId) => {
-                                    const s = sounds.find(s => s.id === soundId);
-                                    if (s) handlePlaySound(s);
-                                  }}
-                                  onToggleFavorite={() => handleToggleFavorite(sound.id)}
-                                />
-                              </div>
-                            );
-                          }}
-                        </Draggable>
-                      )
-                    )}
-                  />
-                  {orderedSounds.length === 0 && (
-                    <div className="col-span-full text-center py-6 text-muted-foreground">
-                      No sounds found in this category.
-                    </div>
-                  )}
-                  {provided.placeholder}
-                </div>
-              );
-            }}
-          </Droppable>
+            </div>
+          </div>
         </main>
         {/* Audio player - toujours visible en bas */}
         <UnifiedAudioPlayer
