@@ -335,7 +335,9 @@ const Index: React.FC = () => {
           />
         </div>
       </header>
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext
+        onDragEnd={handleDragEnd}
+      >
         {/* Main content */}
         <main ref={mainContentRef} className="container mx-auto px-4 py-6">
           <button
@@ -366,6 +368,9 @@ const Index: React.FC = () => {
                           style={{
                             ...provided.draggableProps.style,
                             opacity: snapshot.isDragging ? 0.7 : 1,
+                            zIndex: snapshot.isDragging ? 10000 : 'auto', // Passe la card au-dessus du player
+                            position: snapshot.isDragging ? 'fixed' : 'static',
+                            pointerEvents: snapshot.isDragging ? 'none' : 'auto',
                           }}
                           data-sound-id={sound.id}
                         >
