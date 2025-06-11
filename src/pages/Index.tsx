@@ -132,7 +132,14 @@ const Index: React.FC = () => {
     if (!term) {
       // Pas de recherche : filtrage classique par catégorie ou favoris
       if (activeCategory === 'favorites') {
-        return sounds.filter(sound => favorites.has(sound.id));
+        // Dédoublonnage par id pour éviter les doublons dans les favoris
+        const unique = new Map();
+        sounds.forEach(sound => {
+          if (favorites.has(sound.id) && !unique.has(sound.id)) {
+            unique.set(sound.id, sound);
+          }
+        });
+        return Array.from(unique.values());
       } else {
         return sounds.filter(sound => sound.category === activeCategory);
       }
