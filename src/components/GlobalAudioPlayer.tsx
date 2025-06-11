@@ -221,33 +221,31 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
         borderRadius: 8,
         overflow: 'hidden',
         resize: 'none',
+        position: 'fixed', // Assure que le parent du bouton est bien positionné
       }}
     >
-      {/* Coin de resize custom haut gauche uniquement */}
-      <div
-        onMouseDown={onResizeMouseDown}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          width: 18,
-          height: 18,
-          cursor: 'nwse-resize',
-          zIndex: 10,
-          background: 'transparent',
-          userSelect: 'none',
-        }}
-      />
-      {/* Barre de titre + bouton réduire/agrandir (plus draggable) */}
-      <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border select-none" style={{height: 32}}>
-        <span className="text-xs text-foreground truncate flex-1">
+      {/* Barre de titre avec bouton réduire/agrandir aligné à droite */}
+      <div className="flex items-center justify-between px-0 py-0 bg-card border-b border-border select-none" style={{height: 32}}>
+        <span className="text-xs text-foreground truncate flex-1 pl-3">
           {current ? current.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : 'No sound playing'}
         </span>
         <button
-          className="minecraft-button p-1 ml-2"
+          className="minecraft-button p-0 rounded-none"
           aria-label={isMinimized ? 'Agrandir le player' : 'Réduire le player'}
           onClick={() => setIsMinimized(m => !m)}
           tabIndex={0}
+          style={{
+            boxShadow: 'none',
+            background: 'transparent',
+            border: 'none',
+            color: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: 32,
+            width: 32,
+            margin: 0,
+          }}
         >
           {isMinimized ? (
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M4 12h12M4 8h12" strokeWidth="2" strokeLinecap="round"/></svg>
