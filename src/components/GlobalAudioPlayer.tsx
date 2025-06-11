@@ -149,6 +149,19 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
     }
   };
 
+  // Play/pause handler qui contrôle le player audio
+  const handlePlayPause = () => {
+    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
+      const audio = audioPlayerRef.current.audio.current;
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+    if (onPlayPause) onPlayPause();
+  };
+
   // Format time helper
   const formatTime = (sec: number) => {
     if (!isFinite(sec)) return '0:00';
@@ -249,7 +262,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
               <button className="minecraft-button p-2" onClick={onPrev} aria-label="Précédent">
                 <SkipBack size={20} />
               </button>
-              <button className="minecraft-button p-2" onClick={onPlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
+              <button className="minecraft-button p-2" onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
                 {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
               </button>
               <button className="minecraft-button p-2" onClick={onStop} aria-label="Stop">
