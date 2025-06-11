@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Play, Pause, Rewind, Heart, SkipBack, SkipForward, Repeat } from 'lucide-react';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
+import { Droppable } from '@hello-pangea/dnd';
 
 interface AudioQueueItem {
   id: string;
@@ -23,6 +24,7 @@ interface UnifiedAudioPlayerProps {
   onToggleFavorite?: (soundId: string) => void;
   favorites?: Set<string>;
   onSelectIndex?: (index: number) => void; // Ajout pour rendre la queue cliquable
+  onAddToQueue?: (sound: AudioQueueItem) => void; // Ajout pour drop dans la queue
 }
 
 const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
@@ -39,6 +41,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   onToggleFavorite,
   favorites = new Set(),
   onSelectIndex,
+  onAddToQueue,
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const playerRef = React.useRef<HTMLDivElement>(null);
@@ -207,7 +210,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   return (
     <div
       ref={playerRef}
-      className="fixed z-50 animate-fade-in bg-card border border-border shadow-lg"
+      className="fixed z-[9999] bottom-4 right-4 animate-fade-in bg-card border border-border shadow-lg"
       style={{
         width: size.width,
         height: isMinimized ? 48 : size.height,
@@ -218,14 +221,6 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
         borderRadius: 8,
         overflow: 'hidden',
         resize: 'none',
-        userSelect: dragging ? 'none' : undefined,
-        transition: dragging ? 'none' : 'height 0.2s',
-        right: 16,
-        bottom: 16,
-        left: undefined,
-        top: undefined,
-        display: 'flex',
-        flexDirection: 'column',
       }}
     >
       {/* Coin de resize custom haut gauche uniquement */}
@@ -264,36 +259,42 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
       {/* Mode minimal : juste la barre de titre */}
       {isMinimized ? null : (
         <div className="flex flex-col flex-1 gap-2 p-4 h-full min-h-0" style={{height: `calc(100% - 32px)`}}>
-          {/* Queue display - only show if there's a queue */}
-          {hasQueue && (
-            <div
-              className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 overflow-y-auto"
-              style={{
-                maxHeight: queue.length > 5 ? 5 * 36 : undefined, // 36px par item environ
-                minHeight: 0,
-                marginBottom: 8,
-              }}
-            >
-              {queue.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-2 px-2 py-1 rounded transition-colors ${idx === currentIndex ? 'bg-primary/20 font-bold' : 'cursor-pointer hover:bg-primary/10'}`}
-                  onClick={() => onSelectIndex && idx !== currentIndex && onSelectIndex(idx)}
-                  style={{ cursor: idx !== currentIndex ? 'pointer' : 'default', minHeight: 32 }}
-                >
-                  <span className="truncate flex-1">
-                    {item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}
-                    <span className="text-xs text-muted-foreground ml-2" style={{fontWeight: 'normal'}}>
-                      {item.path}
+          {/* Queue display - droppable pour drag & drop */}
+          <Droppable droppableId="player-queue" direction="vertical">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="bg-card border border-border rounded-t-lg p-2 flex flex-col gap-1 overflow-y-auto"
+                style={{
+                  maxHeight: queue.length > 5 ? 5 * 36 : undefined,
+                  minHeight: 0,
+                  marginBottom: 8,
+                  background: snapshot.isDraggingOver ? '#e5ffe5' : undefined,
+                }}
+              >
+                {queue.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-2 px-2 py-1 rounded transition-colors ${idx === currentIndex ? 'bg-primary/20 font-bold' : 'cursor-pointer hover:bg-primary/10'}`}
+                    onClick={() => onSelectIndex && idx !== currentIndex && onSelectIndex(idx)}
+                    style={{ cursor: idx !== currentIndex ? 'pointer' : 'default', minHeight: 32 }}
+                  >
+                    <span className="truncate flex-1">
+                      {item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}
+                      <span className="text-xs text-muted-foreground ml-2" style={{fontWeight: 'normal'}}>
+                        {item.path}
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-2" style={{minWidth: 44, textAlign: 'right'}}>
-                    {trackDurations[item.id] !== undefined ? formatTime(trackDurations[item.id]) : '--:--'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                    <span className="text-xs text-muted-foreground ml-2" style={{minWidth: 44, textAlign: 'right'}}>
+                      {trackDurations[item.id] !== undefined ? formatTime(trackDurations[item.id]) : '--:--'}
+                    </span>
+                  </div>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
           {/* Zone des boutons + barre de progression toujours en bas */}
           <div className="flex flex-col mt-auto w-full" style={{position: 'relative'}}>
             {/* Custom controls alignés en bas */}

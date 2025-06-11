@@ -5,6 +5,7 @@ import SoundCard from '../components/SoundCard';
 import UnifiedAudioPlayer from '../components/GlobalAudioPlayer';
 import ThemeSwitch from '../components/ThemeSwitch';
 import { FavoritesManager } from '../utils/favoritesManager';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 
 interface Sound {
@@ -28,6 +29,7 @@ const Index: React.FC = () => {
   const [audioQueue, setAudioQueue] = useState<Sound[]>([]);
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(0);
   const [isLooping, setIsLooping] = useState<boolean>(false);
+  const [orderedSounds, setOrderedSounds] = useState<Sound[]>([]);
   const mainContentRef = React.useRef<HTMLDivElement>(null);
 
   // Initialize managers and load data
@@ -219,6 +221,61 @@ const Index: React.FC = () => {
     }
   };
 
+  // Met à jour orderedSounds à chaque changement de filteredSounds
+  useEffect(() => {
+    setOrderedSounds(filteredSounds);
+  }, [filteredSounds]);
+
+  // Gestion du drag & drop
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    // Drop dans la queue du player
+    if (result.destination.droppableId === 'player-queue') {
+      const soundId = result.draggableId;
+      // Cherche le son dans la liste complète
+      const sound = sounds.find(s => s.id === soundId);
+      if (sound) {
+        // Ajoute à la queue seulement si pas déjà présent (pas de doublon)
+        setAudioQueue(prev => prev.some(s => s.id === sound.id) ? prev : [...prev, sound]);
+      }
+      return;
+    }
+
+    // Sinon, réordonne la liste locale (sound-list)
+    if (result.source.droppableId === 'sound-list' && result.destination.droppableId === 'sound-list') {
+      const newOrder = Array.from(orderedSounds);
+      const [removed] = newOrder.splice(result.source.index, 1);
+      newOrder.splice(result.destination.index, 0, removed);
+      setOrderedSounds(newOrder);
+    }
+  };
+
+  // Met à jour la queue du player avec l'ordre drag & drop si on clique sur play all
+  const handlePlayAll = () => {
+    if (orderedSounds.length > 0) {
+      setAudioQueue(orderedSounds);
+      setCurrentQueueIndex(0);
+      setCurrentPlayingSound(orderedSounds[0].id);
+      setIsPlaying(true);
+      setIsPaused(false);
+    }
+  };
+
+  // Ajoute une fonction pour ajouter un son à la queue du player
+  const handleAddToQueue = (sound: Sound) => {
+    setAudioQueue((prev) => [...prev, sound]);
+  };
+
+  // Ajout des handlers manquants pour le player
+  const handlePlayPause = () => {
+    setIsPaused((prev) => !prev);
+    setIsPlaying((prev) => !prev);
+  };
+  const handleToggleLoop = () => {
+    setIsLooping((prev) => !prev);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -278,131 +335,84 @@ const Index: React.FC = () => {
           />
         </div>
       </header>
-
-      {/* Main content */}
-      <main ref={mainContentRef} className="container mx-auto px-4 py-6">
-        <div
-          key={activeCategory + '-' + deferredSearchTerm}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-          role="tabpanel"
-          id={`panel-${activeCategory}`}
-          aria-labelledby={`tab-${activeCategory}`}
-        >
-          {filteredSounds.length > 0 ? (
-            filteredSounds.map((sound) => (
-              <SoundCard
-                key={sound.id}
-                soundId={sound.id}
-                soundName={sound.name}
-                soundPath={sound.path}
-                category={sound.category}
-                isPlaying={currentPlayingSound === sound.id}
-                isFavorite={favorites.has(sound.id)}
-                onPlay={(soundPath, soundId) => {
-                  const sound = sounds.find(s => s.id === soundId);
-                  if (sound) {
-                    setAudioQueue([sound]);
-                    setCurrentQueueIndex(0);
-                    setCurrentPlayingSound(sound.id);
-                    setIsPlaying(true);
-                    setIsPaused(false);
-                  }
-                }}
-                onToggleFavorite={handleToggleFavorite}
-                disableAnimation={!!deferredSearchTerm}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12">
-              <div className="text-muted-foreground text-4xl mb-4">🔍</div>
-              <h2 className="text-lg font-semibold text-foreground mb-2">
-                {deferredSearchTerm.trim()
-                  ? "No sounds found"
-                  : activeCategory === 'favorites' && favorites.size === 0
-                    ? "No favorites yet"
-                    : activeCategory === 'favorites'
-                      ? "No favorite sounds match your search"
-                      : "No sounds in this category"}
-              </h2>
-              <p className="text-foreground">
-                {deferredSearchTerm.trim()
-                  ? "Try adjusting your search terms"
-                  : activeCategory === 'favorites' && favorites.size === 0
-                    ? "Start adding sounds to your favorites by clicking the heart icon"
-                    : activeCategory === 'favorites'
-                      ? "You have no favorite sounds in this category"
-                      : "This category appears to be empty"}
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Unified audio player */}
-      <UnifiedAudioPlayer
-        queue={audioQueue}
-        currentIndex={currentQueueIndex}
-        isPlaying={isPlaying}
-        isPaused={isPaused}
-        isLooping={isLooping}
-        onPlayPause={() => {
-          if (audioQueue.length > 0) {
-            setIsPlaying((prev) => !prev);
-            setIsPaused((prev) => !prev);
-          }
-        }}
-        onPrev={() => {
-          if (audioQueue.length > 1 && currentQueueIndex > 0) {
-            const prevIndex = currentQueueIndex - 1;
-            setCurrentQueueIndex(prevIndex);
-            setCurrentPlayingSound(audioQueue[prevIndex].id);
-            setIsPlaying(true);
-            setIsPaused(false);
-          } else if (isLooping && audioQueue.length > 0) {
-            const lastIndex = audioQueue.length - 1;
-            setCurrentQueueIndex(lastIndex);
-            setCurrentPlayingSound(audioQueue[lastIndex].id);
-            setIsPlaying(true);
-            setIsPaused(false);
-          }
-        }}
-        onNext={() => {
-          if (audioQueue.length > 1 && currentQueueIndex < audioQueue.length - 1) {
-            const nextIndex = currentQueueIndex + 1;
-            setCurrentQueueIndex(nextIndex);
-            setCurrentPlayingSound(audioQueue[nextIndex].id);
-            setIsPlaying(true);
-            setIsPaused(false);
-          } else if (isLooping && audioQueue.length > 0) {
-            setCurrentQueueIndex(0);
-            setCurrentPlayingSound(audioQueue[0].id);
-            setIsPlaying(true);
-            setIsPaused(false);
-          }
-        }}
-        onStop={() => {
-          setIsPlaying(false);
-          setIsPaused(false);
-          setCurrentPlayingSound(null);
-        }}
-        onToggleLoop={() => setIsLooping(l => !l)}
-        onToggleFavorite={handleToggleFavorite}
-        favorites={favorites}
-        onSelectIndex={(idx) => {
-          setCurrentQueueIndex(idx);
-          setCurrentPlayingSound(audioQueue[idx].id);
-          setIsPlaying(true);
-          setIsPaused(false);
-        }}
-      />
-      
-      {/* Footer */}
-      <footer className="bg-card border-t border-border mt-12">
-        <div className="container mx-auto px-4 py-6 text-center text-sm text-foreground">
-          <p>MC Sounds • Built with React & Tailwind CSS</p>
-          <p className="mt-1">Press Space to pause/resume • Use arrow keys to navigate</p>
-        </div>
-      </footer>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        {/* Main content */}
+        <main ref={mainContentRef} className="container mx-auto px-4 py-6">
+          <button
+            className="minecraft-button mb-4"
+            onClick={handlePlayAll}
+            disabled={orderedSounds.length === 0}
+          >
+            ▶️ Play all in this order
+          </button>
+          <Droppable droppableId="sound-list">
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                role="tabpanel"
+                id={`panel-${activeCategory}`}
+                aria-labelledby={`tab-${activeCategory}`}
+              >
+                {orderedSounds.length > 0 ? (
+                  orderedSounds.map((sound, idx) => (
+                    <Draggable key={sound.id} draggableId={sound.id} index={idx}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: snapshot.isDragging ? 0.7 : 1,
+                          }}
+                          data-sound-id={sound.id}
+                        >
+                          <SoundCard
+                            soundId={sound.id}
+                            soundName={sound.name}
+                            soundPath={sound.path}
+                            category={sound.category}
+                            isPlaying={currentPlayingSound === sound.id}
+                            isFavorite={favorites.has(sound.id)}
+                            onPlay={(soundPath, soundId) => {
+                              const s = sounds.find(s => s.id === soundId);
+                              if (s) handlePlaySound(s);
+                            }}
+                            onToggleFavorite={() => handleToggleFavorite(sound.id)}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-6 text-muted-foreground">
+                    No sounds found in this category.
+                  </div>
+                )}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </main>
+        {/* Audio player - toujours visible en bas */}
+        <UnifiedAudioPlayer
+          queue={audioQueue}
+          currentIndex={currentQueueIndex}
+          isPlaying={isPlaying}
+          isPaused={isPaused}
+          isLooping={isLooping}
+          onPlayPause={handlePlayPause}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onStop={handleStop}
+          onToggleLoop={handleToggleLoop}
+          onToggleFavorite={handleToggleFavorite}
+          favorites={favorites}
+          onSelectIndex={setCurrentQueueIndex}
+        />
+      </DragDropContext>
     </div>
   );
 };
