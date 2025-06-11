@@ -213,15 +213,15 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
       className="fixed z-[9999] bottom-4 right-4 animate-fade-in bg-card border border-border shadow-lg"
       style={{
         width: size.width,
-        height: isMinimized ? 48 : size.height,
+        height: isMinimized ? 32 : size.height, // 32px = hauteur du header seulement si minimisé
         minWidth: 260,
-        minHeight: 48,
+        minHeight: 32, // 32px = header
         maxWidth: '100vw',
         maxHeight: '90vh',
         borderRadius: 8,
         overflow: 'hidden',
         resize: 'none',
-        position: 'fixed', // Assure que le parent du bouton est bien positionné
+        position: 'fixed',
       }}
     >
       {/* Barre de titre avec bouton réduire/agrandir aligné à droite */}
