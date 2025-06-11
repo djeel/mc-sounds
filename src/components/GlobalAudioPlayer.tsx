@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Play, Pause, Rewind, Heart, SkipBack, SkipForward, Repeat } from 'lucide-react';
+import AudioPlayer from 'react-h5-audio-player';
+import 'react-h5-audio-player/lib/styles.css';
 
 interface AudioQueueItem {
   id: string;
@@ -20,6 +22,7 @@ interface UnifiedAudioPlayerProps {
   onToggleLoop: () => void;
   onToggleFavorite?: (soundId: string) => void;
   favorites?: Set<string>;
+  onSelectIndex?: (index: number) => void; // Ajout pour rendre la queue cliquable
 }
 
 const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
@@ -35,6 +38,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   onToggleLoop,
   onToggleFavorite,
   favorites = new Set(),
+  onSelectIndex,
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const playerRef = React.useRef<HTMLDivElement>(null);
@@ -49,6 +53,25 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
         height: number;
       }
   >(null);
+
+  const current = queue[currentIndex];
+  const hasQueue = queue.length > 0;
+
+  // Pour éviter la superposition, on garde une ref sur l'AudioPlayer
+  const audioPlayerRef = React.useRef<any>(null);
+
+  // Stoppe le son en cours avant de jouer un nouveau
+  React.useEffect(() => {
+    if (!current?.path) return;
+    // Ne stoppe que si la source change vraiment
+    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
+      const audio = audioPlayerRef.current.audio.current;
+      if (!audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    }
+  }, [currentIndex]); // Utilise currentIndex uniquement
 
   // Drag resize handlers
   const onResizeMouseDown = (e: React.MouseEvent) => {
@@ -78,9 +101,6 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
       window.removeEventListener('mouseup', onUp);
     };
   }, [dragging, dragStart]);
-
-  const current = queue[currentIndex];
-  const hasQueue = queue.length > 0;
 
   return (
     <div
@@ -146,70 +166,33 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
               {queue.map((item, idx) => (
                 <div
                   key={item.id}
-                  className={`flex items-center gap-2 px-2 py-1 rounded transition-colors ${idx === currentIndex ? 'bg-primary/20 font-bold' : ''}`}
+                  className={`flex items-center gap-2 px-2 py-1 rounded transition-colors ${idx === currentIndex ? 'bg-primary/20 font-bold' : 'cursor-pointer hover:bg-primary/10'}`}
+                  onClick={() => onSelectIndex && idx !== currentIndex && onSelectIndex(idx)}
+                  style={{ cursor: idx !== currentIndex ? 'pointer' : 'default' }}
                 >
                   <span className="truncate flex-1">{item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')}</span>
                 </div>
               ))}
             </div>
           )}
-          {/* Player controls */}
-          <div className={`bg-card border border-border ${hasQueue ? 'rounded-b-lg border-t-0' : 'rounded-lg'} p-4 flex flex-col gap-2 shadow-lg`} style={{flex: 1}}>
-            <div className="flex items-center justify-between gap-2">
-              <button 
-                onClick={onPrev} 
-                className="minecraft-button p-2" 
-                aria-label="Previous"
-                disabled={!hasQueue}
-              >
-                <SkipBack className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={onPlayPause} 
-                className="minecraft-button p-2 bg-primary text-primary-foreground border-primary" 
-                aria-label={isPaused ? 'Play' : 'Pause'}
-                disabled={!hasQueue}
-              >
-                {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-              </button>
-              <button 
-                onClick={onNext} 
-                className="minecraft-button p-2" 
-                aria-label="Next"
-                disabled={!hasQueue}
-              >
-                <SkipForward className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={onToggleLoop} 
-                className={`minecraft-button p-2 ${isLooping ? 'bg-primary text-primary-foreground border-primary' : ''}`} 
-                aria-label="Loop"
-                disabled={!hasQueue}
-              >
-                <Repeat className="w-4 h-4" />
-              </button>
-              {/* Bouton de like pour le son courant, à côté du bouton loop */}
-              {onToggleFavorite && (
-                <button
-                  onClick={() => current && onToggleFavorite(current.id)}
-                  className={`minecraft-button p-2 ${favorites.has(current?.id) ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-foreground'}`}
-                  aria-label={favorites.has(current?.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                  aria-pressed={favorites.has(current?.id)}
-                  disabled={!hasQueue}
-                >
-                  <Heart className="w-4 h-4" fill={favorites.has(current?.id) ? 'currentColor' : 'none'} stroke="currentColor" />
-                </button>
-              )}
-              <button 
-                onClick={onStop} 
-                className="minecraft-button p-2 bg-destructive text-destructive-foreground border-destructive" 
-                aria-label="Stop"
-                disabled={!hasQueue}
-              >
-                <div className="w-4 h-4 bg-current" />
-              </button>
-            </div>
-          </div>
+          {/* Nouveau lecteur audio intégré */}
+          <AudioPlayer
+            ref={audioPlayerRef}
+            src={current?.path}
+            autoPlay={isPlaying && !isPaused}
+            showSkipControls
+            showJumpControls={false}
+            onClickPrevious={onPrev}
+            onClickNext={onNext}
+            onPlay={undefined}
+            onPause={undefined}
+            onEnded={onNext}
+            customAdditionalControls={[]}
+            customVolumeControls={[]}
+            loop={isLooping}
+            style={{ borderRadius: 8, marginTop: 8, background: 'var(--card)' }}
+          />
+          {/* Boutons favoris, loop, stop, etc. peuvent rester sous le player si besoin */}
         </div>
       )}
     </div>

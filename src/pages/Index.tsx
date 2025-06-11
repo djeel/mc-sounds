@@ -4,9 +4,8 @@ import CategoryTabs from '../components/CategoryTabs';
 import SoundCard from '../components/SoundCard';
 import UnifiedAudioPlayer from '../components/GlobalAudioPlayer';
 import ThemeSwitch from '../components/ThemeSwitch';
-import { AudioManager } from '../utils/audioManager';
 import { FavoritesManager } from '../utils/favoritesManager';
-import { useSequentialPlay } from '../hooks/useSequentialPlay';
+
 
 interface Sound {
   id: string;
@@ -31,49 +30,10 @@ const Index: React.FC = () => {
   const [isLooping, setIsLooping] = useState<boolean>(false);
   const mainContentRef = React.useRef<HTMLDivElement>(null);
 
-  // Handle playing a sound
-  const handlePlaySound = useCallback(async (soundPath: string, soundId: string) => {
-    const audioManager = AudioManager.getInstance();
-    await audioManager.playSound(soundPath, soundId);
-  }, []);
-
-  // Sequential play hook
-  const {
-    isSequentialMode,
-    startSequentialPlay,
-    stopSequentialPlay,
-    getQueueInfo
-  } = useSequentialPlay({
-    sounds,
-    onPlaySound: handlePlaySound,
-    currentPlayingSound
-  });
-
   // Initialize managers and load data
   useEffect(() => {
     FavoritesManager.initialize();
     setFavorites(FavoritesManager.getFavorites());
-
-    // Set up audio manager callbacks
-    const audioManager = AudioManager.getInstance();
-    audioManager.setCallbacks(
-      (soundId: string) => {
-        setCurrentPlayingSound(soundId);
-        setIsPlaying(true);
-        setIsPaused(false);
-      },
-      () => {
-        setCurrentPlayingSound(null);
-        setIsPlaying(false);
-        setIsPaused(false);
-      },
-      () => {
-        setIsPaused(true);
-      },
-      () => {
-        setIsPaused(false);
-      }
-    );
 
     // Subscribe to favorites changes
     const unsubscribeFavorites = FavoritesManager.subscribe((newFavorites) => {
@@ -111,7 +71,6 @@ const Index: React.FC = () => {
 
     return () => {
       unsubscribeFavorites();
-      audioManager.destroy();
     };
   }, []);
 
@@ -200,123 +159,58 @@ const Index: React.FC = () => {
     return scored.map(({ sound }) => sound);
   }, [sounds, deferredSearchTerm, activeCategory, favorites]);
 
-  // Handle stopping current sound
-  const handleStopSound = useCallback(() => {
-    const audioManager = AudioManager.getInstance();
-    audioManager.stopCurrent();
-    stopSequentialPlay(); // Also stop sequential play
-  }, [stopSequentialPlay]);
-
-  // Handle pausing current sound
-  const handlePauseSound = useCallback(() => {
-    const audioManager = AudioManager.getInstance();
-    audioManager.pauseCurrent();
-  }, []);
-
-  // Handle resuming current sound
-  const handleResumeSound = useCallback(() => {
-    const audioManager = AudioManager.getInstance();
-    audioManager.resumeCurrent();
-  }, []);
-
-  // Handle rewinding current sound
-  const handleRewindSound = useCallback(() => {
-    const audioManager = AudioManager.getInstance();
-    audioManager.rewindCurrent();
-  }, []);
-
   // Handle toggling favorites
   const handleToggleFavorite = useCallback((soundId: string) => {
     FavoritesManager.toggleFavorite(soundId);
   }, []);
 
-  // Get current playing sound name
-  const getCurrentSoundName = useCallback(() => {
-    if (!currentPlayingSound) return null;
-    const sound = sounds.find(s => s.id === currentPlayingSound);
-    return sound ? sound.name : null;
-  }, [currentPlayingSound, sounds]);
+  const [sequentialCategories, setSequentialCategories] = useState<string[]>([]);
+  const [isSequentialMode, setIsSequentialMode] = useState<boolean>(false);
 
-  // Get current sequential category
-  const currentSequentialCategory = useMemo(() => {
-    const queueInfo = getQueueInfo();
-    return queueInfo ? queueInfo.category : undefined;
-  }, [getQueueInfo]);
-
-  // Gestion de la queue pour UnifiedAudioPlayer
-  useEffect(() => {
-    // Si on est en mode séquentiel, la queue est la séquence de la catégorie
-    if (isSequentialMode) {
-      const queueInfo = getQueueInfo();
-      if (queueInfo) {
-        const categorySounds = sounds.filter(s => s.category === queueInfo.category);
-        setAudioQueue(categorySounds);
-        setCurrentQueueIndex(queueInfo.current);
-        return;
-      }
-    }
-    // Sinon, la queue contient juste le son en cours s'il y en a un
-    if (currentPlayingSound) {
-      const sound = sounds.find(s => s.id === currentPlayingSound);
-      if (sound) {
-        setAudioQueue([sound]);
-        setCurrentQueueIndex(0);
-        return;
-      }
-    }
-    setAudioQueue([]);
+  // Handle play action from SoundCard
+  const handlePlaySound = (sound: Sound) => {
+    setCurrentPlayingSound(sound.id);
+    setIsPlaying(true);
+    setIsPaused(false);
+    setAudioQueue([sound]);
     setCurrentQueueIndex(0);
-  }, [isSequentialMode, getQueueInfo, currentPlayingSound, sounds]);
+  };
 
-  // Logique play/pause/next/prev/loop pour UnifiedAudioPlayer
-  const handlePlayPause = useCallback(() => {
-    const audioManager = AudioManager.getInstance();
-    if (isPlaying) {
-      if (isPaused) {
-        audioManager.resumeCurrent();
-      } else {
-        audioManager.pauseCurrent();
-      }
-    } else if (audioQueue.length > 0) {
-      audioManager.playSound(audioQueue[currentQueueIndex].path, audioQueue[currentQueueIndex].id);
-    }
-  }, [isPlaying, isPaused, audioQueue, currentQueueIndex]);
+  // Handle stop action
+  const handleStop = () => {
+    setIsPlaying(false);
+    setIsPaused(false);
+    setCurrentPlayingSound(null);
+  };
 
-  const handleNext = useCallback(() => {
-    if (audioQueue.length > 1 && currentQueueIndex < audioQueue.length - 1) {
-      const nextIndex = currentQueueIndex + 1;
-      setCurrentQueueIndex(nextIndex);
-      const audioManager = AudioManager.getInstance();
-      audioManager.playSound(audioQueue[nextIndex].path, audioQueue[nextIndex].id);
-    } else if (isLooping && audioQueue.length > 0) {
-      setCurrentQueueIndex(0);
-      const audioManager = AudioManager.getInstance();
-      audioManager.playSound(audioQueue[0].path, audioQueue[0].id);
-    }
-  }, [audioQueue, currentQueueIndex, isLooping]);
-
-  const handlePrev = useCallback(() => {
+  // Handle previous track
+  const handlePrev = () => {
     if (audioQueue.length > 1 && currentQueueIndex > 0) {
       const prevIndex = currentQueueIndex - 1;
       setCurrentQueueIndex(prevIndex);
-      const audioManager = AudioManager.getInstance();
-      audioManager.playSound(audioQueue[prevIndex].path, audioQueue[prevIndex].id);
+      setIsPlaying(true);
+      setIsPaused(false);
     } else if (isLooping && audioQueue.length > 0) {
       const lastIndex = audioQueue.length - 1;
       setCurrentQueueIndex(lastIndex);
-      const audioManager = AudioManager.getInstance();
-      audioManager.playSound(audioQueue[lastIndex].path, audioQueue[lastIndex].id);
+      setIsPlaying(true);
+      setIsPaused(false);
     }
-  }, [audioQueue, currentQueueIndex, isLooping]);
+  };
 
-  // Replace direct setActiveCategory with a callback for instant refresh
-  const handleCategoryChange = useCallback((category: string) => {
-    setActiveCategory(category);
-    // Scroll the window to the top when category changes
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 0);
-  }, []);
+  // Handle next track
+  const handleNext = () => {
+    if (audioQueue.length > 1 && currentQueueIndex < audioQueue.length - 1) {
+      const nextIndex = currentQueueIndex + 1;
+      setCurrentQueueIndex(nextIndex);
+      setIsPlaying(true);
+      setIsPaused(false);
+    } else if (isLooping && audioQueue.length > 0) {
+      setCurrentQueueIndex(0);
+      setIsPlaying(true);
+      setIsPaused(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -370,12 +264,10 @@ const Index: React.FC = () => {
           <CategoryTabs
             categories={categories}
             activeCategory={activeCategory}
-            onCategoryChange={handleCategoryChange}
+            onCategoryChange={setActiveCategory}
             favoritesCount={favorites.size}
-            onPlayCategory={startSequentialPlay}
             isSequentialMode={isSequentialMode}
-            onStopSequential={stopSequentialPlay}
-            currentSequentialCategory={currentSequentialCategory}
+            currentSequentialCategory={undefined}
           />
         </div>
       </header>
@@ -399,7 +291,16 @@ const Index: React.FC = () => {
                 category={sound.category}
                 isPlaying={currentPlayingSound === sound.id}
                 isFavorite={favorites.has(sound.id)}
-                onPlay={handlePlaySound}
+                onPlay={(soundPath, soundId) => {
+                  const sound = sounds.find(s => s.id === soundId);
+                  if (sound) {
+                    setAudioQueue([sound]);
+                    setCurrentQueueIndex(0);
+                    setCurrentPlayingSound(sound.id);
+                    setIsPlaying(true);
+                    setIsPaused(false);
+                  }
+                }}
                 onToggleFavorite={handleToggleFavorite}
                 disableAnimation={!!deferredSearchTerm}
               />
@@ -437,13 +338,55 @@ const Index: React.FC = () => {
         isPlaying={isPlaying}
         isPaused={isPaused}
         isLooping={isLooping}
-        onPlayPause={handlePlayPause}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        onStop={handleStopSound}
+        onPlayPause={() => {
+          if (audioQueue.length > 0) {
+            setIsPlaying((prev) => !prev);
+            setIsPaused((prev) => !prev);
+          }
+        }}
+        onPrev={() => {
+          if (audioQueue.length > 1 && currentQueueIndex > 0) {
+            const prevIndex = currentQueueIndex - 1;
+            setCurrentQueueIndex(prevIndex);
+            setCurrentPlayingSound(audioQueue[prevIndex].id);
+            setIsPlaying(true);
+            setIsPaused(false);
+          } else if (isLooping && audioQueue.length > 0) {
+            const lastIndex = audioQueue.length - 1;
+            setCurrentQueueIndex(lastIndex);
+            setCurrentPlayingSound(audioQueue[lastIndex].id);
+            setIsPlaying(true);
+            setIsPaused(false);
+          }
+        }}
+        onNext={() => {
+          if (audioQueue.length > 1 && currentQueueIndex < audioQueue.length - 1) {
+            const nextIndex = currentQueueIndex + 1;
+            setCurrentQueueIndex(nextIndex);
+            setCurrentPlayingSound(audioQueue[nextIndex].id);
+            setIsPlaying(true);
+            setIsPaused(false);
+          } else if (isLooping && audioQueue.length > 0) {
+            setCurrentQueueIndex(0);
+            setCurrentPlayingSound(audioQueue[0].id);
+            setIsPlaying(true);
+            setIsPaused(false);
+          }
+        }}
+        onStop={() => {
+          setIsPlaying(false);
+          setIsPaused(false);
+          setCurrentPlayingSound(null);
+        }}
         onToggleLoop={() => setIsLooping(l => !l)}
         onToggleFavorite={handleToggleFavorite}
         favorites={favorites}
+        onSelectIndex={(idx) => {
+          setCurrentQueueIndex(idx);
+          setCurrentPlayingSound(audioQueue[idx].id);
+          setIsPlaying(true);
+          setIsPaused(false);
+        }}
       />
       
       {/* Footer */}
