@@ -162,6 +162,25 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
     if (onPlayPause) onPlayPause();
   };
 
+  // Stop handler qui contrôle le player audio
+  const handleStop = () => {
+    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
+      const audio = audioPlayerRef.current.audio.current;
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    if (onStop) onStop();
+  };
+
+  // Loop handler qui contrôle le player audio
+  const handleToggleLoop = () => {
+    if (audioPlayerRef.current && audioPlayerRef.current.audio.current) {
+      const audio = audioPlayerRef.current.audio.current;
+      audio.loop = !audio.loop;
+    }
+    if (onToggleLoop) onToggleLoop();
+  };
+
   // Format time helper
   const formatTime = (sec: number) => {
     if (!isFinite(sec)) return '0:00';
@@ -265,10 +284,10 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
               <button className="minecraft-button p-2" onClick={handlePlayPause} aria-label={isPlaying && !isPaused ? 'Pause' : 'Play'}>
                 {isPlaying && !isPaused ? <Pause size={20} /> : <Play size={20} />}
               </button>
-              <button className="minecraft-button p-2" onClick={onStop} aria-label="Stop">
+              <button className="minecraft-button p-2" onClick={handleStop} aria-label="Stop">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
               </button>
-              <button className={`minecraft-button p-2 ${isLooping ? 'bg-green-600 text-white' : ''}`} onClick={onToggleLoop} aria-label="Loop">
+              <button className={`minecraft-button p-2 ${isLooping ? 'bg-green-600 text-white' : ''}`} onClick={handleToggleLoop} aria-label="Loop">
                 <Repeat size={20} />
               </button>
               {onToggleFavorite && (
