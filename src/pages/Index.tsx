@@ -32,6 +32,7 @@ const Index: React.FC = () => {
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(0);
   const [isLooping, setIsLooping] = useState<boolean>(false);
   const [orderedSounds, setOrderedSounds] = useState<Sound[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   const mainContentRef = React.useRef<HTMLDivElement>(null);
 
   // Initialize managers and load data
@@ -338,7 +339,11 @@ const Index: React.FC = () => {
         </div>
       </header>
       <DragDropContext
-        onDragEnd={handleDragEnd}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={result => {
+          setIsDragging(false);
+          handleDragEnd(result);
+        }}
       >
         {/* Main content */}
         <main ref={mainContentRef} className="container mx-auto px-4 py-6">
@@ -441,6 +446,7 @@ const Index: React.FC = () => {
                   onToggleFavorite={handleToggleFavorite}
                   favorites={favorites}
                   onSelectIndex={setCurrentQueueIndex}
+                  isDragging={isDragging}
                 />
               </div>
             </div>
@@ -461,6 +467,7 @@ const Index: React.FC = () => {
           onToggleFavorite={handleToggleFavorite}
           favorites={favorites}
           onSelectIndex={setCurrentQueueIndex}
+          isDragging={isDragging}
         />
       </DragDropContext>
     </div>

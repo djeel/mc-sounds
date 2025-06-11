@@ -25,6 +25,7 @@ interface UnifiedAudioPlayerProps {
   favorites?: Set<string>;
   onSelectIndex?: (index: number) => void; // Ajout pour rendre la queue cliquable
   onAddToQueue?: (sound: AudioQueueItem) => void; // Ajout pour drop dans la queue
+  isDragging?: boolean;
 }
 
 const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
@@ -42,6 +43,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
   favorites = new Set(),
   onSelectIndex,
   onAddToQueue,
+  isDragging = false,
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const playerRef = React.useRef<HTMLDivElement>(null);
@@ -213,7 +215,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
         <div
           ref={provided.innerRef}
           {...provided.droppableProps}
-          className="fixed z-[9999] bottom-4 right-4 animate-fade-in bg-card border border-border shadow-lg"
+          className="fixed z-[30] bottom-4 right-4 animate-fade-in bg-card border border-border shadow-lg"
           style={{
             width: size.width,
             height: isMinimized ? 32 : size.height,
@@ -228,7 +230,7 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
           }}
         >
           {/* Highlight carré pointillé lors du drag-over, overlay absolu dans le lecteur uniquement */}
-          {snapshot.isDraggingOver && (
+          {(snapshot.isDraggingOver || isDragging) && (
             <div
               style={{
                 position: 'absolute',
