@@ -1,5 +1,4 @@
 import React from 'react';
-import { Play, Square } from 'lucide-react';
 
 interface CategoryTabsProps {
   categories: string[];
@@ -61,43 +60,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
                 <span className="capitalize">{category}</span>
               )}
             </button>
-            {/* Sequential play button à droite, même taille que la catégorie, sauf pour 'favorites' */}
-            {category !== 'favorites' && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isSequentialMode && currentSequentialCategory === category) {
-                    handleStopSequential();
-                  } else {
-                    handlePlayCategory(category);
-                  }
-                }}
-                className={`minecraft-button flex items-center justify-center h-10 min-w-[44px] px-0 rounded-none rounded-r border-l-0 text-xs${
-                  isSequentialMode && currentSequentialCategory === category
-                    ? ' active bg-primary-green-500 text-white border-primary-green-600'
-                    : ' bg-card text-foreground border-foreground'
-                }`}
-                aria-label={
-                  isSequentialMode && currentSequentialCategory === category
-                    ? `Stop playing ${category} category`
-                    : `Play all sounds in ${category} category`
-                }
-                title={
-                  isSequentialMode && currentSequentialCategory === category
-                    ? `Stop playing ${category} category`
-                    : `Play all sounds in ${category} category`
-                }
-                style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeftWidth: 0 }}
-                tabIndex={-1}
-              >
-                {isSequentialMode && currentSequentialCategory === category ? (
-                  <Square className="w-4 h-4" fill="currentColor" />
-                ) : (
-                  <Play className="w-4 h-4" fill="currentColor" />
-                )}
-              </button>
-            )}
+            {/* SUPPRIME le bouton de lecture séquentielle */}
           </div>
         ))}
       </nav>
