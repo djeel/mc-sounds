@@ -225,18 +225,18 @@ const UnifiedAudioPlayer: React.FC<UnifiedAudioPlayerProps> = ({
       }}
     >
       {/* Barre de titre avec bouton réduire/agrandir aligné à droite */}
-      <div className="flex items-center justify-between px-0 py-0 bg-card border-b border-border select-none" style={{height: 32}}>
+      <div className="flex items-center justify-between px-0 py-0 bg-card border-b border-border select-none overflow-hidden" style={{height: 32}}>
         <span className="text-xs text-foreground truncate flex-1 pl-3">
           {current ? current.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : 'No sound playing'}
         </span>
         <button
-          className="minecraft-button p-0 rounded-none"
+          className="minecraft-button p-0 rounded-none bg-card"
           aria-label={isMinimized ? 'Agrandir le player' : 'Réduire le player'}
           onClick={() => setIsMinimized(m => !m)}
           tabIndex={0}
           style={{
             boxShadow: 'none',
-            background: 'transparent',
+            background: 'inherit',
             border: 'none',
             color: 'inherit',
             display: 'flex',
